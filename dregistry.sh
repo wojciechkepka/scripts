@@ -22,6 +22,7 @@ Example config file syntax (skip \"\"\"):
 "
 	print_help
 }
+
 print_help() {
 	echo "Usage:
 	dregistry do <IMAGE> [TAG]	- Builds, tags and pushes specified image to registry
@@ -31,6 +32,12 @@ print_help() {
 "
 }
 
+: << 'DOC'
+Checks if the command was successful. If not prints error message and quits with exit code 1
+Parameters:
+	$1 - Exit code of command
+	$2 - Error message
+DOC
 if_failed() {
 	local exit_code=$1
 	local err_msg=$2
@@ -41,6 +48,14 @@ if_failed() {
 	fi
 }
 
+: << 'DOC'
+Checks if the passed variable is not null. If it is prints error message or sets a default value.
+Parameters:
+	$1 - variable
+	$2 - Error message starting with 'Error: ' or default value
+Exports:
+	$READ_ARG_RET - value of the arg
+DOC
 read_arg() {
 	if [[ -n $1 ]]
 	then
@@ -59,6 +74,12 @@ read_arg() {
 	fi
 }
 
+: << 'DOC'
+Checks if specified variable name is set globally. If not prints error message
+Parameters:
+	$1 - Variable name
+	$2 - Error message
+DOC
 check_arg() {
 	local arg_name="$1"
 	local err_msg="$2"
@@ -69,6 +90,11 @@ check_arg() {
 	fi
 }
 
+
+: << 'DOC'
+Exports:
+	$DREGISTRY_CONF - Location of configuration file
+DOC
 get_cfg_location() {
 	if [[ -z $DREGISTRY_CONF ]]
 	then
@@ -81,9 +107,12 @@ get_cfg_location() {
 			exit 1
 		fi
 	fi
-
 }
 
+: << 'DOC'
+Exports:
+	$DREGISTRY_CONF_LINES - Array of lines from file separated by '\n'
+DOC
 load_conf_file() {
 	DREGISTRY_CONF_LINES=()
 	while IFS= read -r line
@@ -92,6 +121,10 @@ load_conf_file() {
 	done < "$DREGISTRY_CONF"
 }
 
+: << 'DOC'
+Exports:
+	$DREGISTRY_IMAGES - Array of image names from config file 
+DOC
 read_images_from_cfg() {
 	load_conf_file
 
@@ -104,6 +137,14 @@ read_images_from_cfg() {
 	done
 }
 
+: << 'DOC'
+Parses configuration for specified image from $DREGISTRY_CONF_LINES
+Parameters:
+	$1 - Name of the image
+Exports:
+	$DOCKER_REGISTRY, $LOGIN_TOKEN	- Global settings (last line read applies)
+	$PROJECT, $BLD_DIR			- Image specific settings
+DOC
 read_cfg_for_image() {
 	local image_name="$1"
 	local found_image=false
@@ -149,6 +190,12 @@ TAG:\t\t\t$TAG
 BLD_DIR:\t\t$BLD_DIR
 "
 }
+
+: << 'DOC'
+Asks user to confirm the build.
+Exports:
+	$DREGISTRY_BUILD - Users answer
+DOC
 confirm_build() {
 	local got_answer=false
 	while [ $got_answer != true ]
@@ -168,6 +215,7 @@ confirm_build() {
 		esac
 	done
 }
+
 
 cmd_do() {
 	read_arg "$1" "Error: provide image name to build and push"
