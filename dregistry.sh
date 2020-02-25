@@ -13,10 +13,10 @@ Example config file syntax (skip \"\"\"):
 	DOCKER_REGISTRY='docker.registry.mydomain.com'
 	LOGIN_TOKEN='F0yWnVU2YtSjlBYpFA5_0-IRO9VcnLUvc1x7gWZwA4-'
 
-	image_name
+	IMAGE='image_name'
 		PROJECT='project-name'
 		BLD_DIR='/path/to/image/src'
-	second_image
+	IMAGE='second_image'
 		...
 	\"\"\"
 "
@@ -24,7 +24,10 @@ Example config file syntax (skip \"\"\"):
 }
 print_help() {
 	echo "Usage:
-	dregistry <IMAGE> [TAG]
+	dregistry do <IMAGE> [TAG]	- Builds, tags and pushes specified image to registry
+	dregistry login <TOKEN>		- Saves login token in config file
+	dregistry list			- Lists images defined in config file
+	dregistry help			- Print full help message
 "
 }
 
@@ -69,25 +72,43 @@ check_arg() {
 get_cfg_location() {
 	if [[ -z $DREGISTRY_CONF ]]
 	then
-		if [ -f "~/.dregistry.conf" ]
+		if [ -f $HOME/.dregistry.conf ]
 		then
-			DREGISTRY_CONF="~/.dregistry.conf"
+			DREGISTRY_CONF="$HOME/.dregistry.conf"
 		else
 			about
-			echo "Error: configuration file not found in ~/.dregistry.conf and DREGISTRY_CONF env var not set"
+			echo "Error: configuration file not found in $HOME/.dregistry.conf and DREGISTRY_CONF env var not set"
 			exit 1
 		fi
 	fi
 
 }
 
-read_cfg() {
-	local conf_file_path="$1"
+read_images_from_cfg() {
 	local conf_file=()
 	while IFS= read -r line
 	do
 		conf_file+=("$line")
-	done < "$conf_file_path"
+	done < "$DREGISTRY_CONF"
+	
+	DREGISTRY_IMAGES=()
+		
+	for line in "${conf_file[@]}"
+	do
+		if [[ $line =~ ^IMAGE=[\'\"](.*)[\'\"] ]];
+		then
+			DREGISTRY_IMAGES+=( "${BASH_REMATCH[1]}" )
+		fi
+	done
+}
+
+read_cfg_for_image() {
+	local image_name="$1"
+	local conf_file=()
+	while IFS= read -r line
+	do
+		conf_file+=("$line")
+	done < "$DREGISTRY_CONF"
 
 	local found_image=false
 
@@ -100,7 +121,7 @@ read_cfg() {
 		then
 			LOGIN_TOKEN="${BASH_REMATCH[1]}"
 		else
-			if [[ $line =~ ^$2 ]]
+			if [[ $line =~ ^IMAGE=[\'\"]$image_name[\'\"] ]]
 			then
 				found_image=true
 			elif [[ $line =~ PROJECT=[\'\"](.*)[\'\"] ]] \
@@ -115,8 +136,8 @@ read_cfg() {
 		fi
 	done
 
-	check_arg "PROJECT" "Error: PROJECT variable missing from config for image $2"
-	check_arg "BLD_DIR" "Error: BLD_DIR variable missing from config for image $2"
+	check_arg "PROJECT" "Error: PROJECT variable missing from config for image $image_name"
+	check_arg "BLD_DIR" "Error: BLD_DIR variable missing from config for image $image_name"
 }
 
 print_info() {
@@ -149,28 +170,72 @@ confirm_build() {
 		esac
 	done
 }
+
+cmd_do() {
+	read_arg "$1" "Error: provide image name to build and push"
+	IMAGE=$READ_ARG_RET
+	read_arg "$2" "latest"
+	TAG=$READ_ARG_RET
+
+	get_cfg_location
+	read_cfg_for_image "$IMAGE"
+	print_info
+	confirm_build
+	if [ $DREGISTRY_BUILD == true ]
+	then
+		docker login -p $LOGIN_TOKEN -u unused $DOCKER_REGISTRY
+		if_failed $? "Error: failed to login to $DOCKER_REGISTRY using $LOGIN_TOKEN"
+
+		docker build --tag $DOCKER_REGISTRY/$PROJECT/$IMAGE:$TAG $BLD_DIR
+		if_failed $? "Error: failed to build image $IMAGE"
+		docker push $DOCKER_REGISTRY/$PROJECT/$IMAGE:$TAG
+	fi
+
+	exit 0
+}
+
+cmd_login() {
+	local auth_token="$1"
+	get_cfg_location
+	echo "Changing auth token in '$DREGISTRY_CONF' to '$auth_token'"
+	sed -i -e "s/^LOGIN_TOKEN=[\'\"].*[\'\"]$/LOGIN_TOKEN='$auth_token'/g" $DREGISTRY_CONF
+	exit 0
+}
+
+cmd_list() {
+	get_cfg_location
+	read_images_from_cfg
+	echo "Available images:"
+	for img in "${DREGISTRY_IMAGES[@]}"
+	do
+		echo -e "\t$img"
+	done
+}
+
 ###############################################################################
 
-read_arg "$1" "Error: provide image name to build and push"
-IMAGE=$READ_ARG_RET
-read_arg "$2" "latest"
-TAG=$READ_ARG_RET
+read_arg "$1" "Error: provide a subcommand to run"
+SUBCOMMAND=$READ_ARG_RET
+shift
 
-get_cfg_location
-read_cfg "$DREGISTRY_CONF" "$IMAGE"
-print_info
-confirm_build
+case $SUBCOMMAND in
+	"do")
+		cmd_do "$1" "$2"
+		;;
+	"login")
+		cmd_login "$1"
+		;;
+	"list")
+		cmd_list
+		;;
+	"help")
+		about
+		;;
+	*)
+		print_help
+		echo "Error: unknown command $SUBCOMMAND"
+		exit 1
+esac
 
-################################################################################
 
-
-if [ $DREGISTRY_BUILD == true ]
-then
-	docker login -p $LOGIN_TOKEN -u unused $DOCKER_REGISTRY
-	if_failed $? "Error: failed to login to $DOCKER_REGISTRY using $LOGIN_TOKEN"
-
-	docker build --tag $DOCKER_REGISTRY/$PROJECT/$IMAGE:$TAG $BLD_DIR
-	if_failed $? "Error: failed to build image $IMAGE"
-	docker push $DOCKER_REGISTRY/$PROJECT/$IMAGE:$TAG
-fi
 
