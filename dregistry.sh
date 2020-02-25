@@ -209,6 +209,7 @@ confirm_build() {
 				break
 				;;
 			'n')
+				DREGISTRY_BUILD="false"
 				got_answer=true
 				break
 				;;
@@ -227,7 +228,7 @@ cmd_do() {
 	read_cfg_for_image "$IMAGE"
 	print_info
 	confirm_build
-	if [ $DREGISTRY_BUILD == true ]
+	if [[ $DREGISTRY_BUILD == true ]]
 	then
 		docker login -p $LOGIN_TOKEN -u unused $DOCKER_REGISTRY
 		if_failed $? "Error: failed to login to $DOCKER_REGISTRY using $LOGIN_TOKEN"
