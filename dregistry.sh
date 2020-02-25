@@ -114,21 +114,21 @@ read_cfg_for_image() {
 
 	for line in "${conf_file[@]}"
 	do
-		if [[ $line =~ ^DOCKER_REGISTRY=\"(.*)\" ]]
+		if [[ $line =~ ^DOCKER_REGISTRY=[\'\"](.*)[\'\"]$ ]]
 		then
 			DOCKER_REGISTRY="${BASH_REMATCH[1]}"
-		elif [[ $line =~ ^LOGIN_TOKEN=\"(.*)\" ]]
+		elif [[ $line =~ ^LOGIN_TOKEN=[\'\"](.*)[\'\"]$ ]]
 		then
 			LOGIN_TOKEN="${BASH_REMATCH[1]}"
 		else
-			if [[ $line =~ ^IMAGE=[\'\"]$image_name[\'\"] ]]
+			if [[ $line =~ ^IMAGE=[\'\"]$image_name[\'\"]$ ]]
 			then
 				found_image=true
-			elif [[ $line =~ PROJECT=[\'\"](.*)[\'\"] ]] \
+			elif [[ $line =~ ^[[:blank:]]+PROJECT=[\'\"](.*)[\'\"]$ ]] \
 			&& [ $found_image ]
 			then
 				PROJECT="${BASH_REMATCH[1]}"
-			elif [[ $line =~ BLD_DIR=[\'\"](.*)[\'\"] ]] \
+			elif [[ $line =~ ^[[:blank:]]+BLD_DIR=[\'\"](.*)[\'\"]$ ]] \
 			&& [ $found_image ]
 			then
 				BLD_DIR="${BASH_REMATCH[1]}"
