@@ -84,18 +84,20 @@ get_cfg_location() {
 
 }
 
-read_images_from_cfg() {
-	local conf_file=()
+load_conf_file() {
+	DREGISTRY_CONF_LINES=()
 	while IFS= read -r line
 	do
-		conf_file+=("$line")
+		DREGISTRY_CONF_LINES+=("$line")
 	done < "$DREGISTRY_CONF"
-	
-	DREGISTRY_IMAGES=()
-		
-	for line in "${conf_file[@]}"
+}
+
+read_images_from_cfg() {
+	load_conf_file
+
+	for line in "${DREGISTRY_CONF_LINES[@]}"
 	do
-		if [[ $line =~ ^IMAGE=[\'\"](.*)[\'\"] ]];
+		if [[ $line =~ ^IMAGE=[\'\"](.*)[\'\"]$ ]];
 		then
 			DREGISTRY_IMAGES+=( "${BASH_REMATCH[1]}" )
 		fi
@@ -104,15 +106,11 @@ read_images_from_cfg() {
 
 read_cfg_for_image() {
 	local image_name="$1"
-	local conf_file=()
-	while IFS= read -r line
-	do
-		conf_file+=("$line")
-	done < "$DREGISTRY_CONF"
-
 	local found_image=false
 
-	for line in "${conf_file[@]}"
+	load_conf_file
+
+	for line in "${DREGISTRY_CONF_LINES[@]}"
 	do
 		if [[ $line =~ ^DOCKER_REGISTRY=[\'\"](.*)[\'\"]$ ]]
 		then
