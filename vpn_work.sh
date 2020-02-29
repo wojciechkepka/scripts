@@ -31,12 +31,18 @@ ctrl_c() {
 
 ################################################################################
 
-command -v openvpn
+command -v openvpn >/dev/null
 if [ $? -ne 0 ]
 then
 	echo "Error: openvpn executable not found, exitting"
 	exit 1
 fi
 
-replace_resolv $VPN_NAMESERVER
-sudo openvpn $VPN_CONF
+if [ -f $VPN_CONF ]
+then
+	replace_resolv $VPN_NAMESERVER
+	sudo openvpn $VPN_CONF
+else
+	echo "Error: openvpn config missing from '$VPN_CONF'"
+	exit 1
+fi
