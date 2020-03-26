@@ -5,6 +5,9 @@ USERHOME="/home/$USERNAME"
 GIT_CONF_REPO='https://github.com/wojciechkepka/configs'
 GIT_CONF_DIR="$USERHOME/dev/configs"
 XDG_CONF_DIR="$USERHOME/.config"
+THEME_DIR="$USERHOME/.themes"
+ICONS_DIR="$USERHOME/.icons"
+
 PACKAGE_QUERY_REPO='https://aur.archlinux.org/package-query.git'
 YAOURT_REPO='https://aur.archlinux.org/yaourt.git'
 
@@ -17,6 +20,7 @@ BASE_PACKAGES=(
 	'chrony'
 	'ctags'
 	'dhcpcd'
+	'dunst' #notification server
 	'exa' # better ls
 	'fd' # better find
 	'feh' # Image viewer
@@ -27,6 +31,9 @@ BASE_PACKAGES=(
 	'gpick' # Color picker
 	'htop'
 	'i3lock'
+	'iw' # WIFI
+	'iwd'
+	'libnotify'
 	'man-db'
 	'man-pages'
 	'mupdf'
@@ -36,7 +43,7 @@ BASE_PACKAGES=(
 	'noto-fonts-emoji'
 	'openssh'
 	'perf'
-	'picom' # new Compiz
+	'picom' # new compton
 	'pidgin'
 	'powerline-fonts'
 	'powertop'
@@ -46,6 +53,7 @@ BASE_PACKAGES=(
 	'redshift'
 	'ripgrep'
 	'rofi' # menu and app launcher
+	'sudo'
 	'sxhkd' # keybinding daemon
 	'termite'
 	'tcpdump'
@@ -74,27 +82,33 @@ AUR_PACKAGES=(
 )
 
 ################################################################################
+notify() {
+	local msg="$1"
+	echo "################################################################################"
+	echo "INFO: $msg"
+	echo "################################################################################"
+}
 check_root() {
 	# Check for root permissions
 	if [ "$EUID" -ne 0 ]
-	  then echo "Please run as root"
+	  then notify "Please run as root"
 	  exit 1
 	fi
 }
 create_user() {
-	echo "Creating user $USERNAME"
-	useradd -G sudo -m -s /bin/bash $USERNAME
+	notify "Creating user $USERNAME"
+	useradd --groups sudo --create-home --shell /bin/bash $USERNAME
 	echo "Enter password for user $USERNAME"
 	passwd $USERNAME
 }
 build_yaourt() {
 	# Install necessary packages for yaourt build
-	pacman -S --needed base-devel yail git wget
+	pacman --sync --needed base-devel yail git wget
 
 	# Create a temporary dir
 	local bld_dir="/tmp/$(date +%s)-yaourt"
-	echo "Creating $bld_dir"
-	mkdir -p $bld_dir
+	notify "Creating $bld_dir"
+	mkdir --parents $bld_dir
 	cd $bld_dir
 
 	# Clone package query and yaourt
@@ -102,19 +116,19 @@ build_yaourt() {
 	git clone $YAOURT_REPO
 
 	# Build package-query
-	echo "Building package-query"
+	notify "Building package-query"
 	cd package-query && makepkg -si
 	cd ..
 
 	# Build yaourt
-	echo "Building yaourt"
+	notify "Building yaourt"
 	cd yaourt && makepkg -si
 	cd /
 }
 install_and_run_reflector() {
-	pacman -S reflector
-	echo "Running reflector"
-	reflector --latests 200 --sort rate --save /etc/pacman.d/mirrorlist
+	pacman --sync reflector
+	notify "Running reflector"
+	reflector --latests 100 --sort rate --save /etc/pacman.d/mirrorlist
 }
 install_packages() {
 	install_and_run_reflector
@@ -123,37 +137,52 @@ install_packages() {
 	then
 		build_yaourt
 	fi
-	echo "Installing base packages"
+	notify "Installing base packages"
 	yaourt -S "${BASE_PACKAGES[@]}"
-	echo "Installing aur packages"
+	notify "Installing aur packages"
 	yaourt -S "${AUR_PACKAGES[@]}"
 }
 cfg_link() {
 	local cfg_file="$1"
-	ln -s -v $GIT_CONF_DIR/$cfg_file $USERHOME/$cfg_file
+	ln --symbolic -verbose $GIT_CONF_DIR/$cfg_file $USERHOME/$cfg_file
+}
+install_themes() {
+	notify "Installing themes"
+	mkdir --parents --verbose $THEME_DIR \
+				  $ICONS_DIR
+	
+	tar --extract --file=$GIT_CONF_REPO/Sweet-Dark.tar.xz --directory=$THEME_DIR
+	tar --extract --file=$GIT_CONF_REPO/Sweet-Purple.tar.xz --directory=$ICONS_DIR
 }
 install_configs() {
-	mkdir -p -v $GIT_CONF_DIR \
-		    $XDG_CONF_DIR \
-		    $XDG_CONF_DIR/bspwm \
-		    $XDG_CONF_DIR/nvim \
-		    $XDG_CONF_DIR/polybar \
-		    $XDG_CONF_DIR/sxhkd \
-		    $XDG_CONF_DIR/termite
+	notify "Installing configs"
+	mkdir --parents --verbose $GIT_CONF_DIR \
+				  $XDG_CONF_DIR \
+		    		  $XDG_CONF_DIR/bspwm \
+		    		  $XDG_CONF_DIR/nvim \
+		    		  $XDG_CONF_DIR/polybar \
+		    		  $XDG_CONF_DIR/sxhkd \
+		    		  $XDG_CONF_DIR/termite \
+		    		  $XDG_CONF_DIR/gtk-3.0 \
+		    		  $XDG_CONF_DIR/dunst
 
 	git clone $GIT_CONF_REPO $GIT_CONF_DIR
 
 	cfg_link ".tmux.conf"
 	cfg_link ".bashrc"
 	cfg_link ".xinitrc"
+	cfg_link ".gtkrc-2.0"
 	cfg_link ".config/bspwm/bspwmrc"
 	cfg_link ".config/nvim/init.vim"
 	cfg_link ".config/nvim/coc-settings.json"
 	cfg_link ".config/polybar/config"
 	cfg_link ".config/sxhkd/sxhkdrc"
 	cfg_link ".config/termite/config"
+	cfg_link ".config/dunst/dunstrc"
+	cfg_link ".config/gtk-3.0/settings.ini"
+	cfg_link ".config/gtk-3.0/gtk.css"
 
-	chmod +x -v $GIT_CONF_DIR/.config/bspwm/bspwmrc
+	chmod +x --verbose $GIT_CONF_DIR/.config/bspwm/bspwmrc
 
 	# For bspwm and sxhkd to know where the config is
 	echo 'export XDG_CONFIG_DIR=$HOME/.config' >> /etc/profile
@@ -162,6 +191,9 @@ setup() {
 	create_user
 	install_packages
 	install_configs
+	install_themes
+
+	chown --recursive $USERNAME:$USERNAME $USERHOME
 }
 
 ################################################################################
