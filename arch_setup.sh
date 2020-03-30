@@ -128,7 +128,7 @@ build_yaourt() {
 install_and_run_reflector() {
 	pacman --sync reflector
 	notify "Running reflector"
-	reflector --latests 100 --sort rate --save /etc/pacman.d/mirrorlist
+	reflector -l 100 --sort rate --save /etc/pacman.d/mirrorlist
 }
 install_packages() {
 	install_and_run_reflector
