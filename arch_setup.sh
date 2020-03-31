@@ -26,6 +26,7 @@ BASE_PACKAGES=(
 	'feh' # Image viewer
 	'filezilla'
 	'firefox'
+	'flameshot' # Lightweight screenshot tool
 	'git'
 	'gnome-keyring'
 	'gpick' # Color picker
@@ -100,6 +101,11 @@ create_user() {
 	useradd --groups sudo --create-home --shell /bin/bash $USERNAME
 	echo "Enter password for user $USERNAME"
 	passwd $USERNAME
+	create_home_dirs
+}
+create_home_dirs() {
+	mkdir --parents --verbose $USERHOME/screenshots \
+				  $USERHOME/wallpapers \
 }
 build_yaourt() {
 	# Install necessary packages for yaourt build
