@@ -138,9 +138,9 @@ install_packages() {
 		build_yaourt
 	fi
 	notify "Installing base packages"
-	yaourt -S "${BASE_PACKAGES[@]}"
+	yaourt -S --noconfirm "${BASE_PACKAGES[@]}"
 	notify "Installing aur packages"
-	yaourt -S "${AUR_PACKAGES[@]}"
+	yaourt -S --noconfirm "${AUR_PACKAGES[@]}"
 }
 cfg_link() {
 	local cfg_file="$1"
