@@ -12,6 +12,7 @@ PACKAGE_QUERY_REPO='https://aur.archlinux.org/package-query.git'
 YAOURT_REPO='https://aur.archlinux.org/yaourt.git'
 
 BASE_PACKAGES=(
+	'alacritty' # <3<3<3
 	'alsa-firmware'
 	'alsa-utils'
 	'amd-ucode'
@@ -164,6 +165,7 @@ install_configs() {
 	notify "Installing configs"
 	mkdir --parents --verbose $GIT_CONF_DIR \
 				  $XDG_CONF_DIR \
+		    		  $XDG_CONF_DIR/alacritty \
 		    		  $XDG_CONF_DIR/bspwm \
 		    		  $XDG_CONF_DIR/nvim \
 		    		  $XDG_CONF_DIR/polybar \
@@ -178,6 +180,7 @@ install_configs() {
 	cfg_link ".bashrc"
 	cfg_link ".xinitrc"
 	cfg_link ".gtkrc-2.0"
+	cfg_link ".config/alacritty/alacritty"
 	cfg_link ".config/bspwm/bspwmrc"
 	cfg_link ".config/nvim/init.vim"
 	cfg_link ".config/nvim/coc-settings.json"
