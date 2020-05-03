@@ -183,8 +183,8 @@ install_themes() {
 	mkdir --parents --verbose $THEME_DIR \
 				  $ICONS_DIR
 	
-	tar --extract --file=$GIT_CONF_REPO/Sweet-Dark.tar.xz --directory=$THEME_DIR
-	tar --extract --file=$GIT_CONF_REPO/Sweet-Purple.tar.xz --directory=$ICONS_DIR
+	tar --extract --file=$GIT_CONF_DIR/Sweet-Dark.tar.xz --directory=$THEME_DIR
+	tar --extract --file=$GIT_CONF_DIR/Sweet-Purple.tar.xz --directory=$ICONS_DIR
 }
 install_configs() {
 	notify "Installing configs"
@@ -205,7 +205,7 @@ install_configs() {
 	cfg_link ".bashrc"
 	cfg_link ".xinitrc"
 	cfg_link ".gtkrc-2.0"
-	cfg_link ".config/alacritty/alacritty"
+	cfg_link ".config/alacritty/alacritty.yml"
 	cfg_link ".config/bspwm/bspwmrc"
 	cfg_link ".config/nvim/init.vim"
 	cfg_link ".config/nvim/coc-settings.json"
