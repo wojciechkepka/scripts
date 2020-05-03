@@ -167,7 +167,7 @@ install_packages() {
 }
 cfg_link() {
 	local cfg_file="$1"
-	ln --symbolic -verbose $GIT_CONF_DIR/$cfg_file $USERHOME/$cfg_file
+	ln --symbolic --verbose $GIT_CONF_DIR/$cfg_file $USERHOME/$cfg_file
 }
 install_themes() {
 	notify "Installing themes"
@@ -188,7 +188,9 @@ install_configs() {
 		    		  $XDG_CONF_DIR/sxhkd \
 		    		  $XDG_CONF_DIR/termite \
 		    		  $XDG_CONF_DIR/gtk-3.0 \
-		    		  $XDG_CONF_DIR/dunst
+		    		  $XDG_CONF_DIR/dunst \
+				  $XDG_CONF_DIR/rofi \
+				  $XDG_CONF_DIR/picom
 
 	git clone $GIT_CONF_REPO $GIT_CONF_DIR
 
@@ -206,6 +208,8 @@ install_configs() {
 	cfg_link ".config/dunst/dunstrc"
 	cfg_link ".config/gtk-3.0/settings.ini"
 	cfg_link ".config/gtk-3.0/gtk.css"
+	cfg_link ".config/picom/picom.conf"
+	cfg_link ".config/rofi/config.rasi"
 
 	chmod +x --verbose $GIT_CONF_DIR/.config/bspwm/bspwmrc
 
