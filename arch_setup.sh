@@ -9,7 +9,7 @@ THEME_DIR="$USERHOME/.themes"
 ICONS_DIR="$USERHOME/.icons"
 
 PACKAGE_QUERY_REPO='https://aur.archlinux.org/package-query.git'
-YAOURT_REPO='https://aur.archlinux.org/yaourt.git'
+YAY_REPO='https://aur.archlinux.org/yay.git'
 
 BASE_PACKAGES=(
 	'alacritty' # <3<3<3
