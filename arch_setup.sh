@@ -124,55 +124,73 @@ check_root() {
 }
 create_user() {
 	notify "Creating user $USERNAME"
-	useradd --groups sudo --create-home --shell /bin/bash $USERNAME
+	useradd --groups wheel --create-home --shell /bin/bash $USERNAME
 	echo "Enter password for user $USERNAME"
 	passwd $USERNAME
 	create_home_dirs
+	install_sudo
 }
 create_home_dirs() {
 	mkdir --parents --verbose $USERHOME/screenshots \
 				  $USERHOME/wallpapers \
+				  $USERHOME/Downloads \
+				  $USERHOME/Documents
 }
-build_yaourt() {
-	# Install necessary packages for yaourt build
-	pacman --sync --needed base-devel yail git wget
+build_yay() {
+	# Install necessary packages for yay build
+	pacman --sync --needed --noconfirm base-devel git wget go
 
 	# Create a temporary dir
-	local bld_dir="/tmp/$(date +%s)-yaourt"
+	local bld_dir="/tmp/$(date +%s)-yay"
 	notify "Creating $bld_dir"
 	mkdir --parents $bld_dir
 	cd $bld_dir
 
-	# Clone package query and yaourt
+	# Clone package query and yay
 	git clone $PACKAGE_QUERY_REPO
-	git clone $YAOURT_REPO
+	git clone $YAY_REPO
 
 	# Build package-query
 	notify "Building package-query"
 	cd package-query && makepkg -si
 	cd ..
 
-	# Build yaourt
-	notify "Building yaourt"
-	cd yaourt && makepkg -si
+	# Build yay
+	notify "Building yay"
+	cd yay && makepkg -si
 	cd /
 }
+install_sudo() {
+	notify "Installing sudo"
+	command -v sudo
+	if [ $? -eq 1 ]
+	then
+		pacman --sync --noconfirm sudo
+	fi
+	notify "Enabling sudo for group wheel"
+	echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/01wheel
+	chmod 440 /etc/sudoers.d/01wheel
+}
 install_and_run_reflector() {
-	pacman --sync reflector
+	command -v reflector
+	if [ $? -eq 1 ]
+	then
+		pacman --sync --noconfirm reflector
+	fi
 	notify "Running reflector"
 	reflector -l 100 --sort rate --save /etc/pacman.d/mirrorlist
 }
 install_packages() {
-	install_and_run_reflector
-	command -v yaourt
-	if [ $? -eq 0 ]
+	ask "Run reflector?" install_and_run_reflector
+	command -v yay
+	if [ $? -eq 1 ]
 	then
-		build_yaourt
+		build_yay
 	fi
 	notify "Installing base packages"
-	yaourt -S --noconfirm "${BASE_PACKAGES[@]}"
+	sudo -u $USERNAME yay -S --noconfirm "${BASE_PACKAGES[@]}"
 	notify "Installing aur packages"
-	yaourt -S --noconfirm "${AUR_PACKAGES[@]}"
+	sudo -u $USERNAME yay -S --noconfirm "${AUR_PACKAGES[@]}"
 }
 cfg_link() {
 	local cfg_file="$1"
