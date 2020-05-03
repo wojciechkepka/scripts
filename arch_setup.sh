@@ -240,10 +240,10 @@ install_configs() {
 	echo 'export XDG_CONFIG_DIR=$HOME/.config' >> /etc/profile
 }
 setup() {
-	create_user
-	install_packages
-	install_configs
-	install_themes
+	ask "Create user?" create_user
+	ask "Install Packages?" install_packages
+	ask "Install configs?" install_configs
+	ask "Install themes?" install_themes
 
 	chown --recursive $USERNAME:$USERNAME $USERHOME
 }
