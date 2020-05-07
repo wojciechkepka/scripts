@@ -40,7 +40,7 @@ change_gtk3_theme() {
 			;;
 		"gruvbox")
 			echo "gothere"
-			sd "s/(gtk-theme-name=).*/\1gruvbox-git/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
+			sd "s/(gtk-theme-name=).*/\1gruvbox-gtk/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
 			;;
 		*)
 			echo "No GTK theme for $1"
