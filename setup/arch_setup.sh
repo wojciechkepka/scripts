@@ -36,6 +36,7 @@ BASE_PACKAGES=(
 	'iw' # WIFI
 	'iwd'
 	'libnotify'
+	'lvm2'	
 	'man-db'
 	'man-pages'
 	'mupdf'
@@ -43,8 +44,13 @@ BASE_PACKAGES=(
 	'neovim'
 	'net-tools'
 	'noto-fonts-emoji'
+	'nodejs' # for coc
+	'npm'
+	'ntfs-3g'
 	'openssh'
+	'os-prober'
 	'perf'
+	'perl-cgi'
 	'picom' # new compton
 	'pidgin'
 	'powerline-fonts'
@@ -57,6 +63,7 @@ BASE_PACKAGES=(
 	'rofi' # menu and app launcher
 	'sudo'
 	'sxhkd' # keybinding daemon
+	'sysstat'
 	'termite'
 	'tcpdump'
 	'thunderbird'
