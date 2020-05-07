@@ -33,14 +33,16 @@ disable_nvim() {
 enable_nvim() {
 	sd "s/^\"(colorscheme $1)/\1/g" $XDG_CONFIG_DIR/nvim/init.vim
 }
-change_gtk3_theme() {
+change_gtk_theme() {
 	case "$1" in
 		"ayu")
 			sd "s/(gtk-theme-name=).*/\1Aritim-Dark/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
+			sd "s/(gtk-theme-name=\").*\"$/\1Aritim-Dark\"/g" $HOME/.gtkrc-2.0
 			;;
 		"gruvbox")
 			echo "gothere"
 			sd "s/(gtk-theme-name=).*/\1gruvbox-gtk/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
+			sd "s/(gtk-theme-name=\").*\"$/\1gruvbox-gtk\"/g" $HOME/.gtkrc-2.0
 			;;
 		*)
 			echo "No GTK theme for $1"
@@ -64,7 +66,7 @@ enable_theme() {
 	enable_nvim $1
 	enable_polybar $1
 	link_alacritty $1
-	change_gtk3_theme $1
+	change_gtk_theme $1
 }
 disable_theme() {
 	echo "Disabling $1"
