@@ -176,6 +176,9 @@ install_themes() {
 	
 	tar --extract --file=$GIT_CONF_DIR/Sweet-Dark.tar.xz --directory=$THEME_DIR
 	tar --extract --file=$GIT_CONF_DIR/Sweet-Purple.tar.xz --directory=$ICONS_DIR
+	tar --extract --file=$GIT_CONF_DIR/Sweet-Teal.tar.xz --directory=$ICONS_DIR
+	git clone https://github.com/wojciechkepka/gruvbox-gtk $THEME_DIR/gruvbox-gtk
+	git clone https://github.com/wojciechkepka/Aritim-Dark $THEME_DIR/Aritim-dark
 }
 install_configs() {
 	notify "Installing configs"
