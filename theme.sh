@@ -8,10 +8,14 @@ THEMES=(
 )
 
 ################################################################################
+msg() {
+	echo $1
+	echo "------------------------------------------------------"
+}
 sd() {
+	echo "Replacing $2"
 	sed -r -i --follow-symlinks -e "$1" $2
 }
-
 enable_tmux() {
 	sd "s/^#(set.*#$1)/\1/g" $HOME/.tmux.conf
 }
@@ -40,7 +44,6 @@ change_gtk_theme() {
 			sd "s/(gtk-theme-name=\").*\"$/\1Aritim-Dark\"/g" $HOME/.gtkrc-2.0
 			;;
 		"gruvbox")
-			echo "gothere"
 			sd "s/(gtk-theme-name=).*/\1gruvbox-gtk/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
 			sd "s/(gtk-theme-name=\").*\"$/\1gruvbox-gtk\"/g" $HOME/.gtkrc-2.0
 			;;
@@ -60,27 +63,29 @@ disable_polybar() {
 	sd "N;s/(;$1\n)(label-focused-underline.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config
 }
 enable_theme() {
-	echo "Enabling $1"
+	msg "Enabling $1"
 	enable_tmux $1
 	enable_bashrc $1
 	enable_nvim $1
 	enable_polybar $1
 	link_alacritty $1
 	change_gtk_theme $1
+	echo "------------------------------------------------------"
 }
 disable_theme() {
-	echo "Disabling $1"
+	msg "Disabling $1"
 	disable_tmux $1
 	disable_bashrc $1
 	disable_nvim $1
 	disable_polybar $1
+	echo "------------------------------------------------------"
 }
 
 ################################################################################
 
 if [[ " ${THEMES[@]} " =~ " $THEME " ]]
 then
-	echo "Changing theme to $THEME"
+	msg "Changing theme to $THEME"
 	for theme in "${THEMES[@]}"
 	do
 		if [[ ! $theme == $THEME ]]
@@ -92,12 +97,10 @@ then
 	done
 else
 	echo "Unsupported theme $THEME"
-	echo "------------------------"
 	echo -e "Available themes: \n${THEMES[@]}"
 	exit 1
 fi
 
-echo "------------------------------------------------------"
 echo "Run this commands to source files in current terminal:"
 echo -e "\ttmux source-file ~/.tmux.conf"
 echo -e "\t. ~/.bashrc"
