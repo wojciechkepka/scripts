@@ -1,13 +1,14 @@
 #!/bin/bash
 
 THEME="$1"
-CONF_REPO_DIR="/home/wojtek/dev/configs"
+CONF_REPO_DIR="$HOME/dev/configs"
 THEMES=(
 	"ayu"
 	"gruvbox"
 )
 
 ################################################################################
+
 msg() {
 	echo $1
 	echo "------------------------------------------------------"
