@@ -3,6 +3,7 @@
 COC_EXTENSIONS=(
 	'coc-html'
 	'coc-css'
+    'coc-docker'
 	'coc-rust-analyzer'
 	'coc-python'
 	'coc-yaml'
