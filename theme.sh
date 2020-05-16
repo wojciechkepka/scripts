@@ -30,10 +30,8 @@ enable_bashrc() {
 disable_bashrc() {
 	sd "s/^(export PS1.*#$1)/#\1/g" $HOME/.bashrc
 }
-link_alacritty() {
-    # This has to be a physical link until symlink hot reloading is sorted out.
-    # https://github.com/alacritty/alacritty/issues/2237
-	ln -Pfv $CONF_REPO_DIR/.config/alacritty/$1.yml $XDG_CONFIG_DIR/alacritty/alacritty.yml	
+change_alacritty() {
+    sd "s/(colors: \*).*/\1$1/g" $XDG_CONFIG_DIR/alacritty/alacritty.yml
 }
 disable_nvim() {
     case "$1" in
@@ -93,7 +91,7 @@ enable_theme() {
 	enable_bashrc $1
 	enable_nvim $1
 	enable_polybar $1
-	link_alacritty $1
+	change_alacritty $1
 	change_gtk_theme $1
     change_wallpaper $1
 	echo "------------------------------------------------------"
