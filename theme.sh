@@ -107,7 +107,7 @@ disable_theme() {
 change_wallpaper() {
     case "$1" in
         "ayu")
-            wallpaper="ayu.jpg"
+            wallpaper="ayu.png"
             ;;
         "gruvbox")
             wallpaper="gruvbox.jpg"
