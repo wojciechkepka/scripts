@@ -5,6 +5,7 @@ CONF_REPO_DIR="$HOME/dev/configs"
 THEMES=(
 	"ayu"
 	"gruvbox"
+    "solarized"
 )
 
 ################################################################################
@@ -33,24 +34,45 @@ link_alacritty() {
 	ln -sfv $CONF_REPO_DIR/.config/alacritty/$1.yml $XDG_CONFIG_DIR/alacritty/alacritty.yml	
 }
 disable_nvim() {
+    case "$1" in
+        "solarized")
+            theme="solarized8_high"
+            ;;
+        *)
+            theme="$1"
+            ;;
+    esac
 	sd "s/^(colorscheme $1)/\"\1/g" $XDG_CONFIG_DIR/nvim/init.vim
 }
 enable_nvim() {
+    case "$1" in
+        "solarized")
+            theme="solarized8_high"
+            ;;
+        *)
+            theme="$1"
+            ;;
+    esac
 	sd "s/^\"(colorscheme $1)/\1/g" $XDG_CONFIG_DIR/nvim/init.vim
 }
 change_gtk_theme() {
 	case "$1" in
 		"ayu")
-			sd "s/(gtk-theme-name=).*/\1Aritim-Dark/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
-			sd "s/(gtk-theme-name=\").*\"$/\1Aritim-Dark\"/g" $HOME/.gtkrc-2.0
+            theme="Aritim-Dark"
 			;;
 		"gruvbox")
-			sd "s/(gtk-theme-name=).*/\1gruvbox-gtk/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
-			sd "s/(gtk-theme-name=\").*\"$/\1gruvbox-gtk\"/g" $HOME/.gtkrc-2.0
+            theme="gruvbox-gtk"
 			;;
+        "solarized")
+            theme="Solarized-Dark-Orange"
+            ;;
 		*)
 			echo "No GTK theme for $1"
+            return 1
 	esac
+
+    sd "s/(gtk-theme-name=).*/\1$theme/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
+    sd "s/(gtk-theme-name=\").*\"$/\1$theme\"/g" $HOME/.gtkrc-2.0
 
 }
 enable_polybar() {
