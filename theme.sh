@@ -94,7 +94,6 @@ enable_theme() {
 	link_alacritty $1
 	change_gtk_theme $1
     change_wallpaper $1
-    pkill panel;$XDG_CONFIG_DIR/bspwm/bspwmrc > /dev/null 2>&1 # restart bspwm
 	echo "------------------------------------------------------"
 }
 disable_theme() {
@@ -140,6 +139,8 @@ then
 			disable_theme $theme
 		else
 			enable_theme $theme
+            pkill panel;$XDG_CONFIG_DIR/bspwm/bspwmrc > /dev/null 2>&1 # restart bspwm
+            tmux source-file $HOME/.tmux.conf
 		fi
 	done
 else
