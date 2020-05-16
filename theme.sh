@@ -93,6 +93,8 @@ enable_theme() {
 	enable_polybar $1
 	link_alacritty $1
 	change_gtk_theme $1
+    change_wallpaper $1
+    pkill panel;$XDG_CONFIG_DIR/bspwm/bspwmrc > /dev/null 2>&1 # restart bspwm
 	echo "------------------------------------------------------"
 }
 disable_theme() {
@@ -102,6 +104,28 @@ disable_theme() {
 	disable_nvim $1
 	disable_polybar $1
 	echo "------------------------------------------------------"
+}
+change_wallpaper() {
+    case "$1" in
+        "ayu")
+            wallpaper="ayu.jpg"
+            ;;
+        "gruvbox")
+            wallpaper="gruvbox.jpg"
+            ;;
+        "solarized")
+            wallpaper="solarized.png"
+            ;;
+        *)
+            echo "No wallpaper for $1"
+            return 1
+    esac
+
+    wall="$HOME/wallpapers/$wallpaper"
+    echo "Changing wallpaper to $wall"
+
+    wall="${wall//\//\\\/}" # need to escape / for sed to work
+    sd "s/(feh --bg-fill).*/\1 $wall)/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
 }
 
 ################################################################################
