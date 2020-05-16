@@ -181,9 +181,10 @@ install_themes() {
 	mkdir --parents --verbose $THEME_DIR \
 				  $ICONS_DIR
 	
-	tar --extract --file=$GIT_CONF_DIR/Sweet-Dark.tar.xz --directory=$THEME_DIR
-	tar --extract --file=$GIT_CONF_DIR/Sweet-Purple.tar.xz --directory=$ICONS_DIR
-	tar --extract --file=$GIT_CONF_DIR/Sweet-Teal.tar.xz --directory=$ICONS_DIR
+	tar --extract --file=$GIT_CONF_DIR/themes/Sweet-Dark.tar.xz --directory=$THEME_DIR
+	tar --extract --file=$GIT_CONF_DIR/icon_themes/Sweet-Purple.tar.xz --directory=$ICONS_DIR
+	tar --extract --file=$GIT_CONF_DIR/icon_themes/Sweet-Teal.tar.xz --directory=$ICONS_DIR
+	unzip $GIT_CONF_DIR/themes/Solarized-Dark-Orange_2.0.1.zip -d $THEME_DIR
 	git clone https://github.com/wojciechkepka/gruvbox-gtk $THEME_DIR/gruvbox-gtk
 	git clone https://github.com/wojciechkepka/Aritim-Dark $THEME_DIR/Aritim-dark
 }
