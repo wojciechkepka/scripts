@@ -125,7 +125,7 @@ change_wallpaper() {
     echo "Changing wallpaper to $wall"
 
     wall="${wall//\//\\\/}" # need to escape / for sed to work
-    sd "s/(feh --bg-fill).*/\1 $wall)/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
+    sd "s/(feh --bg-fill).*/\1 $wall/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
 }
 
 ################################################################################
