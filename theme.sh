@@ -31,7 +31,9 @@ disable_bashrc() {
 	sd "s/^(export PS1.*#$1)/#\1/g" $HOME/.bashrc
 }
 link_alacritty() {
-	ln -sfv $CONF_REPO_DIR/.config/alacritty/$1.yml $XDG_CONFIG_DIR/alacritty/alacritty.yml	
+    # This has to be a physical link until symlink hot reloading is sorted out.
+    # https://github.com/alacritty/alacritty/issues/2237
+	ln -Pfv $CONF_REPO_DIR/.config/alacritty/$1.yml $XDG_CONFIG_DIR/alacritty/alacritty.yml	
 }
 disable_nvim() {
     case "$1" in
