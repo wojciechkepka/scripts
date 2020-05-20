@@ -36,7 +36,7 @@ change_alacritty() {
 disable_nvim() {
     case "$1" in
         "solarized")
-            theme="solarized8_high"
+            theme="solarized8"
             ;;
         *)
             theme="$1"
@@ -47,7 +47,7 @@ disable_nvim() {
 enable_nvim() {
     case "$1" in
         "solarized")
-            theme="solarized8_high"
+            theme="solarized8"
             ;;
         *)
             theme="$1"
