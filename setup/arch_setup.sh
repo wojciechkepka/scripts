@@ -53,6 +53,7 @@ BASE_PACKAGES=(
 	'perl-cgi'
 	'picom' # new compton
 	'pidgin'
+    'pidgin-libnotify'
 	'powerline-fonts'
 	'powertop'
 	'pulseaudio'
