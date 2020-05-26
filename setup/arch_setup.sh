@@ -16,6 +16,7 @@ BASE_PACKAGES=(
     'alsa-firmware'
     'alsa-utils'
     'amd-ucode'
+    'bat'
     'bspwm'
     'ccls'
     'chrony'
