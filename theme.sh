@@ -3,32 +3,32 @@
 THEME="$1"
 CONF_REPO_DIR="$HOME/dev/configs"
 THEMES=(
-	"ayu"
-	"gruvbox"
+    "ayu"
+    "gruvbox"
     "solarized"
 )
 
 ################################################################################
 
 msg() {
-	echo $1
-	echo "------------------------------------------------------"
+    echo $1
+    echo "------------------------------------------------------"
 }
 sd() {
-	echo "Replacing $2"
-	sed -r -i --follow-symlinks -e "$1" $2
+    echo "Replacing $2"
+    sed -r -i --follow-symlinks -e "$1" $2
 }
 enable_tmux() {
-	sd "s/^#(set.*#$1)/\1/g" $HOME/.tmux.conf
+    sd "s/^#(set.*#$1)/\1/g" $HOME/.tmux.conf
 }
 disable_tmux() {
-	sd "s/^(set.*#$1)/#\1/g" $HOME/.tmux.conf
+    sd "s/^(set.*#$1)/#\1/g" $HOME/.tmux.conf
 }
 enable_bashrc() {
-	sd "s/^#(export PS1.*#$1)/\1/g" $HOME/.bashrc
+    sd "s/^#(export PS1.*#$1)/\1/g" $HOME/.bashrc
 }
 disable_bashrc() {
-	sd "s/^(export PS1.*#$1)/#\1/g" $HOME/.bashrc
+    sd "s/^(export PS1.*#$1)/#\1/g" $HOME/.bashrc
 }
 change_alacritty() {
     sd "s/(colors: \*).*/\1$1/g" $XDG_CONFIG_DIR/alacritty/alacritty.yml
@@ -42,7 +42,7 @@ disable_nvim() {
             theme="$1"
             ;;
     esac
-	sd "s/^(colorscheme $1)/\"\1/g" $XDG_CONFIG_DIR/nvim/init.vim
+    sd "s/^(colorscheme $1)/\"\1/g" $XDG_CONFIG_DIR/nvim/init.vim
 }
 enable_nvim() {
     case "$1" in
@@ -53,56 +53,56 @@ enable_nvim() {
             theme="$1"
             ;;
     esac
-	sd "s/^\"(colorscheme $1)/\1/g" $XDG_CONFIG_DIR/nvim/init.vim
+    sd "s/^\"(colorscheme $1)/\1/g" $XDG_CONFIG_DIR/nvim/init.vim
 }
 change_gtk_theme() {
-	case "$1" in
-		"ayu")
+    case "$1" in
+        "ayu")
             theme="Aritim-Dark"
-			;;
-		"gruvbox")
+            ;;
+        "gruvbox")
             theme="gruvbox-gtk"
-			;;
+            ;;
         "solarized")
             theme="Solarized-Dark-Orange"
             ;;
-		*)
-			echo "No GTK theme for $1"
+        *)
+            echo "No GTK theme for $1"
             return 1
-	esac
+    esac
 
     sd "s/(gtk-theme-name=).*/\1$theme/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
     sd "s/(gtk-theme-name=\").*\"$/\1$theme\"/g" $HOME/.gtkrc-2.0
 
 }
 enable_polybar() {
-	sd "N;s/(;$1\n);(foreground.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config.ini
-	sd "N;s/(;$1\n);(format-foreground.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
-	sd "N;s/(;$1\n);(label-focused-underline.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
+    sd "N;s/(;$1\n);(foreground.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config.ini
+    sd "N;s/(;$1\n);(format-foreground.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
+    sd "N;s/(;$1\n);(label-focused-underline.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
 }
 disable_polybar() {
-	sd "N;s/(;$1\n)(foreground.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config.ini
-	sd "N;s/(;$1\n)(format-foreground.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
-	sd "N;s/(;$1\n)(label-focused-underline.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
+    sd "N;s/(;$1\n)(foreground.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config.ini
+    sd "N;s/(;$1\n)(format-foreground.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
+    sd "N;s/(;$1\n)(label-focused-underline.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
 }
 enable_theme() {
-	msg "Enabling $1"
-	enable_tmux $1
-	enable_bashrc $1
-	enable_nvim $1
-	enable_polybar $1
-	change_alacritty $1
-	change_gtk_theme $1
+    msg "Enabling $1"
+    enable_tmux $1
+    enable_bashrc $1
+    enable_nvim $1
+    enable_polybar $1
+    change_alacritty $1
+    change_gtk_theme $1
     change_wallpaper $1
-	echo "------------------------------------------------------"
+    echo "------------------------------------------------------"
 }
 disable_theme() {
-	msg "Disabling $1"
-	disable_tmux $1
-	disable_bashrc $1
-	disable_nvim $1
-	disable_polybar $1
-	echo "------------------------------------------------------"
+    msg "Disabling $1"
+    disable_tmux $1
+    disable_bashrc $1
+    disable_nvim $1
+    disable_polybar $1
+    echo "------------------------------------------------------"
 }
 change_wallpaper() {
     case "$1" in
@@ -131,22 +131,22 @@ change_wallpaper() {
 
 if [[ " ${THEMES[@]} " =~ " $THEME " ]]
 then
-	msg "Changing theme to $THEME"
-	for theme in "${THEMES[@]}"
-	do
-		if [[ ! $theme == $THEME ]]
-		then
-			disable_theme $theme
-		else
-			enable_theme $theme
+    msg "Changing theme to $THEME"
+    for theme in "${THEMES[@]}"
+    do
+        if [[ ! $theme == $THEME ]]
+        then
+            disable_theme $theme
+        else
+            enable_theme $theme
             pkill panel;$XDG_CONFIG_DIR/bspwm/bspwmrc > /dev/null 2>&1 # restart bspwm
             tmux source-file $HOME/.tmux.conf
-		fi
-	done
+        fi
+    done
 else
-	echo "Unsupported theme $THEME"
-	echo -e "Available themes: \n${THEMES[@]}"
-	exit 1
+    echo "Unsupported theme $THEME"
+    echo -e "Available themes: \n${THEMES[@]}"
+    exit 1
 fi
 
 echo "Run this commands to source files in current terminal:"
