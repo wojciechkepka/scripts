@@ -120,11 +120,13 @@ change_wallpaper() {
             return 1
     esac
 
+    common="$HOME/wallpapers/crosshair.jpg"
     wall="$HOME/wallpapers/$wallpaper"
     echo "Changing wallpaper to $wall"
 
     wall="${wall//\//\\\/}" # need to escape / for sed to work
-    sd "s/(feh --bg-fill).*/\1 $wall/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
+    common="${common//\//\\\/}"
+    sd "s/(feh --bg-fill).*(--bg-fill $common)/\1 $wall \2/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
 }
 
 ################################################################################
