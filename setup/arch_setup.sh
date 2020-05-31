@@ -81,7 +81,8 @@ BASE_PACKAGES=(
     'xclip'
     'xorg-xinit'
     'xorg-xrandr'
-    'zathura' # pdf viewer with nice dark mode
+    'zathura' # document viewer with nice dark mode
+    'zathura-pdf-mupdf'
 )
 
 AUR_PACKAGES=(
