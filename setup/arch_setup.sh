@@ -213,6 +213,7 @@ install_configs() {
         ".gtkrc-2.0"
         ".tmux.conf"
         ".xinitrc"
+        ".Xresources"
         ".config/alacritty/alacritty.yml"
         ".config/bspwm/bspwmrc"
         ".config/nvim/init.vim"
