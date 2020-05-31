@@ -114,9 +114,9 @@ create_user() {
 }
 create_home_dirs() {
     mkdir --parents --verbose $USERHOME/screenshots \
-                  $USERHOME/wallpapers \
-                  $USERHOME/Downloads \
-                  $USERHOME/Documents
+                              $USERHOME/wallpapers \
+                              $USERHOME/Downloads \
+                              $USERHOME/Documents
 }
 build_yay() {
     # Install necessary packages for yay build
@@ -181,7 +181,7 @@ cfg_link() {
 install_themes() {
     notify "Installing themes"
     mkdir --parents --verbose $THEME_DIR \
-                  $ICONS_DIR
+                              $ICONS_DIR
     
     tar --extract --file=$GIT_CONF_DIR/themes/Sweet-Dark.tar.xz --directory=$THEME_DIR
     tar --extract --file=$GIT_CONF_DIR/icon_themes/Sweet-Purple.tar.xz --directory=$ICONS_DIR
@@ -202,29 +202,36 @@ install_configs() {
                       $XDG_CONF_DIR/termite \
                       $XDG_CONF_DIR/gtk-3.0 \
                       $XDG_CONF_DIR/dunst \
-                  $XDG_CONF_DIR/rofi \
-                  $XDG_CONF_DIR/picom
+                      $XDG_CONF_DIR/rofi \
+                      $XDG_CONF_DIR/picom
 
     git clone $GIT_CONF_REPO $GIT_CONF_DIR
+    
+    conf_files=(
+        ".bashrc"
+        ".gtkrc-2.0"
+        ".tmux.conf"
+        ".xinitrc"
+        ".config/alacritty/alacritty.yml"
+        ".config/bspwm/bspwmrc"
+        ".config/nvim/init.vim"
+        ".config/nvim/coc-settings.json"
+        ".config/polybar/colors.ini"
+        ".config/polybar/config.ini"
+        ".config/polybar/modules.ini"
+        ".config/sxhkd/sxhkdrc"
+        ".config/termite/config"
+        ".config/dunst/dunstrc"
+        ".config/gtk-3.0/settings.ini"
+        ".config/gtk-3.0/gtk.css"
+        ".config/picom/picom.conf"
+        ".config/rofi/config.rasi"
+    )
 
-    cfg_link ".tmux.conf"
-    cfg_link ".bashrc"
-    cfg_link ".xinitrc"
-    cfg_link ".gtkrc-2.0"
-    cfg_link ".config/alacritty/alacritty.yml"
-    cfg_link ".config/bspwm/bspwmrc"
-    cfg_link ".config/nvim/init.vim"
-    cfg_link ".config/nvim/coc-settings.json"
-    cfg_link ".config/polybar/colors.ini"
-    cfg_link ".config/polybar/config.ini"
-    cfg_link ".config/polybar/modules.ini"
-    cfg_link ".config/sxhkd/sxhkdrc"
-    cfg_link ".config/termite/config"
-    cfg_link ".config/dunst/dunstrc"
-    cfg_link ".config/gtk-3.0/settings.ini"
-    cfg_link ".config/gtk-3.0/gtk.css"
-    cfg_link ".config/picom/picom.conf"
-    cfg_link ".config/rofi/config.rasi"
+    for file in "${conf_files[@]}"
+    do
+        cfg_link $file
+    done
 
     chmod +x --verbose $GIT_CONF_DIR/.config/bspwm/bspwmrc
 
