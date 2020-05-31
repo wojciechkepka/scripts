@@ -205,7 +205,8 @@ install_configs() {
                       $XDG_CONF_DIR/gtk-3.0 \
                       $XDG_CONF_DIR/dunst \
                       $XDG_CONF_DIR/rofi \
-                      $XDG_CONF_DIR/picom
+                      $XDG_CONF_DIR/picom \
+                      $XDG_CONF_DIR/zathura
 
     git clone $GIT_CONF_REPO $GIT_CONF_DIR
     
@@ -229,6 +230,7 @@ install_configs() {
         ".config/gtk-3.0/gtk.css"
         ".config/picom/picom.conf"
         ".config/rofi/config.rasi"
+        ".config/zathura/zathurarc"
     )
 
     for file in "${conf_files[@]}"
