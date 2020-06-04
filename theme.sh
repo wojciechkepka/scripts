@@ -108,25 +108,28 @@ change_wallpaper() {
     case "$1" in
         "ayu")
             wallpaper="ayu.png"
+            vertical="crosshair.jpg"
             ;;
         "gruvbox")
             wallpaper="gruvbox.jpg"
+            vertical="gruvbox_vertical.jpg"
             ;;
         "solarized")
             wallpaper="solarized.png"
+            vertical="crosshair.jpg"
             ;;
         *)
             echo "No wallpaper for $1"
             return 1
     esac
 
-    common="$HOME/wallpapers/crosshair.jpg"
-    wall="$HOME/wallpapers/$wallpaper"
-    echo "Changing wallpaper to $wall"
+    vertical="$HOME/wallpapers/crosshair.jpg"
+    horizontal="$HOME/wallpapers/$wallpaper"
+    echo "Changing wallpaper to $horizontal and $vertical"
 
-    wall="${wall//\//\\\/}" # need to escape / for sed to work
-    common="${common//\//\\\/}"
-    sd "s/(feh --bg-fill).*(--bg-fill $common)/\1 $wall \2/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
+    horizontal="${horizontal//\//\\\/}" # need to escape / for sed to work
+    vertical="${vertical//\//\\\/}"
+    sd "s/(feh --bg-fill).*(--bg-fill $vertical)/\1 $horizontal \2/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
 }
 
 ################################################################################
