@@ -129,7 +129,7 @@ change_wallpaper() {
 
     horizontal="${horizontal//\//\\\/}" # need to escape / for sed to work
     vertical="${vertical//\//\\\/}"
-    sd "s/(feh --bg-fill).*/\1 $horizontal --bg fill $vertical/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
+    sd "s/(feh --bg-fill).*/\1 $horizontal --bg-fill $vertical/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
 }
 
 ################################################################################
