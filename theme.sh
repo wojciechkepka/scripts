@@ -107,15 +107,15 @@ disable_theme() {
 change_wallpaper() {
     case "$1" in
         "ayu")
-            wallpaper="ayu.png"
+            horizontal="ayu.png"
             vertical="crosshair.jpg"
             ;;
         "gruvbox")
-            wallpaper="gruvbox.jpg"
+            horizontal="gruvbox.jpg"
             vertical="gruvbox_vertical.jpg"
             ;;
         "solarized")
-            wallpaper="solarized.png"
+            horizontal="solarized.png"
             vertical="crosshair.jpg"
             ;;
         *)
@@ -123,13 +123,13 @@ change_wallpaper() {
             return 1
     esac
 
-    vertical="$HOME/wallpapers/crosshair.jpg"
-    horizontal="$HOME/wallpapers/$wallpaper"
+    vertical="$HOME/wallpapers/$vertical"
+    horizontal="$HOME/wallpapers/$horizontal"
     echo "Changing wallpaper to $horizontal and $vertical"
 
     horizontal="${horizontal//\//\\\/}" # need to escape / for sed to work
     vertical="${vertical//\//\\\/}"
-    sd "s/(feh --bg-fill).*(--bg-fill $vertical)/\1 $horizontal \2/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
+    sd "s/(feh --bg-fill).*/\1 $horizontal --bg fill $vertical/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
 }
 
 ################################################################################
