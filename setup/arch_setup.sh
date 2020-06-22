@@ -22,6 +22,7 @@ BASE_PACKAGES=(
     'chrony'
     'ctags'
     'dhcpcd'
+    'dkms'
     'dunst' #notification server
     'exa' # better ls
     'fd' # better find
@@ -36,7 +37,9 @@ BASE_PACKAGES=(
     'i3lock'
     'iw' # WIFI
     'iwd'
+    'libimobiledevice'
     'libnotify'
+    'linux-headers'
     'lvm2'    
     'man-db'
     'man-pages'
@@ -74,6 +77,7 @@ BASE_PACKAGES=(
     'ttf-font-awesome'
     'ttf-hack'
     'unzip'
+    'usbutils'
     'vim'
     'vlc'
     'w3m' # for image display in Ranger
