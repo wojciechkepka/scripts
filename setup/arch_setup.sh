@@ -34,11 +34,13 @@ BASE_PACKAGES=(
     'gnome-keyring'
     'gpick' # Color picker
     'htop'
-    'i3lock'
     'iw' # WIFI
     'iwd'
     'libimobiledevice'
     'libnotify'
+    'lightdm'
+    'lightdm-webkit2-greeter'
+    'lightdm-webkit-theme-litarval'
     'linux-headers'
     'lvm2'    
     'man-db'
@@ -184,6 +186,10 @@ cfg_link() {
     local cfg_file="$1"
     ln --symbolic --verbose $GIT_CONF_DIR/$cfg_file $USERHOME/$cfg_file
 }
+etc_link() {
+    local cfg_file="$1"
+    ln --symbolic --verbose $GIT_CONF_DIR$cfg_file $cfg_file
+}
 install_themes() {
     notify "Installing themes"
     mkdir --parents --verbose $THEME_DIR \
@@ -240,6 +246,16 @@ install_configs() {
     for file in "${conf_files[@]}"
     do
         cfg_link $file
+    done
+
+    etc_files=(
+        "/etc/lightdm/lightdm.conf"
+        "/etc/lightdm/lightdm-webkit2-greeter.conf"
+    )
+
+    for file in "${etc_files[@]}"
+    do
+        etc_link $file
     done
 
     chmod +x --verbose $GIT_CONF_DIR/.config/bspwm/bspwmrc
