@@ -6,6 +6,7 @@ THEMES=(
     "ayu"
     "gruvbox"
     "solarized"
+    "nord"
 )
 
 ################################################################################
@@ -57,7 +58,7 @@ enable_nvim() {
 }
 change_gtk_theme() {
     case "$1" in
-        "ayu")
+        "ayu" | "nord")
             theme="Aritim-Dark"
             ;;
         "gruvbox")
@@ -106,7 +107,7 @@ disable_theme() {
 }
 change_wallpaper() {
     case "$1" in
-        "ayu")
+        "ayu" | "nord")
             horizontal="ayu.png"
             vertical="crosshair.jpg"
             ;;
