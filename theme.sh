@@ -107,7 +107,7 @@ disable_theme() {
 }
 change_wallpaper() {
     case "$1" in
-        "ayu" | "nord")
+        "ayu")
             horizontal="ayu.png"
             vertical="crosshair.jpg"
             ;;
@@ -118,6 +118,10 @@ change_wallpaper() {
         "solarized")
             horizontal="solarized.png"
             vertical="crosshair.jpg"
+            ;;
+        "nord")
+            horizontal="nord_arch.png"
+            vertical="nord_arch_vertical.png"
             ;;
         *)
             echo "No wallpaper for $1"
@@ -130,7 +134,7 @@ change_wallpaper() {
 
     horizontal="${horizontal//\//\\\/}" # need to escape / for sed to work
     vertical="${vertical//\//\\\/}"
-    sd "s/(feh --bg-fill).*/\1 $horizontal --bg-fill $vertical/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
+    sd "s/(feh --bg-fill).*/\1 $vertical --bg-fill $horizontal/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
 }
 
 ################################################################################
