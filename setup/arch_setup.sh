@@ -98,6 +98,7 @@ AUR_PACKAGES=(
     'rust-analyzer'
     'ttf-iosevka'
     'vim-plug'
+    'starship'
 )
 
 ################################################################################
