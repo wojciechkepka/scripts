@@ -246,6 +246,7 @@ install_configs() {
         ".config/picom/picom.conf"
         ".config/rofi/config.rasi"
         ".config/zathura/zathurarc"
+        ".config/starship.toml"
     )
 
     for file in "${conf_files[@]}"
