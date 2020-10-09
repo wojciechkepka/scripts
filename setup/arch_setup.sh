@@ -54,7 +54,9 @@ BASE_PACKAGES=(
     'npm'
     'ntfs-3g'
     'openssh'
+    'openvpn'
     'os-prober'
+    'papirus-icon-theme'
     'perf'
     'perl-cgi'
     'picom' # new compton
@@ -94,11 +96,13 @@ BASE_PACKAGES=(
 AUR_PACKAGES=(
     'font-manager'
     'neovim-plug'
+    'openvpn-update-resolv-conf'
+    'papirus-folders'
     'polybar'
     'rust-analyzer'
+    'starship'
     'ttf-iosevka'
     'vim-plug'
-    'starship'
 )
 
 ################################################################################
