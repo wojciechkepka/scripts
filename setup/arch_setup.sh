@@ -54,12 +54,12 @@ build_yay() {
 
     # Build package-query
     notify "Building package-query"
-    cd package-query && makepkg -si
+    cd package-query && sudo -u $USERNAME makepkg -si
     cd ..
 
     # Build yay
     notify "Building yay"
-    cd yay && makepkg -si
+    cd yay && sudo -u $USERNAME makepkg -si
     cd /
 }
 install_sudo() {
