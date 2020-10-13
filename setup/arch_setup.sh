@@ -49,6 +49,7 @@ BASE_PACKAGES=(
     'nautilus'
     'neovim'
     'net-tools'
+    'newsboat' # rss reader
     'noto-fonts-emoji'
     'nodejs' # for coc
     'npm'
@@ -221,13 +222,16 @@ install_configs() {
                       $XDG_CONF_DIR/dunst \
                       $XDG_CONF_DIR/rofi \
                       $XDG_CONF_DIR/picom \
-                      $XDG_CONF_DIR/zathura
+                      $XDG_CONF_DIR/zathura \
+                      $USERHOME/.newsboat
+
 
     git clone $GIT_CONF_REPO $GIT_CONF_DIR
     
     conf_files=(
         ".bashrc"
         ".gtkrc-2.0"
+        ".newsboat"
         ".tmux.conf"
         ".xinitrc"
         ".Xresources"
