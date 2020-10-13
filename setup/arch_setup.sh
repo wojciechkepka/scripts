@@ -58,6 +58,7 @@ BASE_PACKAGES=(
     'openvpn'
     'os-prober'
     'papirus-icon-theme'
+    'peek'
     'perf'
     'perl-cgi'
     'picom' # new compton
