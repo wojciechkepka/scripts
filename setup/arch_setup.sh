@@ -52,6 +52,8 @@ build_yay() {
     git clone $PACKAGE_QUERY_REPO
     git clone $YAY_REPO
 
+    chown -R $USERNAME:$USERNAME $bld_dir
+
     # Build package-query
     notify "Building package-query"
     cd package-query && sudo -u $USERNAME makepkg -si
