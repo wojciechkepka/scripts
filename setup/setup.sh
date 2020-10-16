@@ -3,6 +3,7 @@
 . ./_setup.sh
 
 LOCATION=$1
+TMPSCRIPTS=$LOCATION/tmp/scripts
 
 if [ -z "$LOCATION" ]
 then
@@ -22,12 +23,14 @@ PACSTRAP_PKGS=(
     'dhcpcd'
 )
 
+notify "Bootstraping base system to $LOCATION"
+saferun pacstrap $LOCATION ${PACSTRAP_PKGS[@]}
 
-pacstrap $LOCATION ${PACSTRAP_PKGS[@]}
+notify "Generating fstab"
 genfstab -U $LOCATION >> $LOCATION/etc/fstab
 
-TMPSCRIPTS=$LOCATION/tmp/scripts
+notify "Preparing setup scripts"
 mkdir -p $TMPSCRIPTS
-cp ./* $TMPSCRIPTS
+saferun cp ./* $TMPSCRIPTS
 
-arch-chroot $LOCATION $TMPSCRIPTS/_setup.sh
+saferun arch-chroot $LOCATION $TMPSCRIPTS/_setup.sh
