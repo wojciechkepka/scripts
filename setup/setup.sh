@@ -27,7 +27,7 @@ pacstrap $LOCATION ${PACSTRAP_PKGS[@]}
 genfstab -U $LOCATION >> $LOCATION/etc/fstab
 
 TMPSCRIPTS=$LOCATION/tmp/scripts
-mkdir -p TMPSCRIPTS
+mkdir -p $TMPSCRIPTS
 cp ./* $TMPSCRIPTS
 
 arch-chroot $LOCATION $TMPSCRIPTS/_setup.sh
