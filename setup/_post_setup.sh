@@ -12,7 +12,8 @@ COC_EXTENSIONS=(
 NVIM_CONF="$HOME/.config/nvim/init.vim"
 
 ################################################################################
-. ./common.sh
+. ./_common.sh
+. ./_packages.sh
 
 trap ctrl_c INT
 
@@ -48,13 +49,14 @@ install_coc_extensions() {
         fi
     done
 }
+install_extra_pkgs() {
+    notify "Installing aur packages"
+    sudo -u $USERNAME yay -S --noconfirm "${AUR_PACKAGES[@]}"
+}
 
-post_main() {
+post_setup() {
+    ask "Install additional packages?" install_extra_pkgs
     check_nvim
     ask "Install nvim plugins?" install_nvim_pluggins
     ask "Install coc extensions?" install_coc_extensions
 }
-
-################################################################################
-
-post_main

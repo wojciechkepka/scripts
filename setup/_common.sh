@@ -1,5 +1,9 @@
 #!/bin/bash
 
+BGREEN='\033[1;32m'
+BWhite='\033[1;37m'
+NC='\033[0m'
+
 function ctrl_c() {
     echo "Exiting..."
     exit 1
@@ -8,7 +12,7 @@ function ctrl_c() {
 ask() {
     local msg="$1"
     shift
-    echo "$msg y/n"
+    echo -e "${BGREEN}$msg y/n${NC}"
     while true
     do
         read -n 1 -s c
@@ -29,6 +33,6 @@ ask() {
 notify() {
     local msg="$1"
     echo "################################################################################"
-    echo "INFO: $msg"
+    echo -e "${BWhite}INFO: $msg${NC}"
     echo "################################################################################"
 }

@@ -78,6 +78,7 @@ BASE_PACKAGES=(
     'w3m' # for image display in Ranger
     'wget'
     'xclip'
+    'xorg-server'
     'xorg-xinit'
     'xorg-xrandr'
     'zathura' # document viewer with nice dark mode

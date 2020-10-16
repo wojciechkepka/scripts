@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USERNAME='wojtek'
+USERNAME=""
 USERHOME="/home/$USERNAME"
 GIT_CONF_REPO='https://github.com/wojciechkepka/configs'
 GIT_CONF_DIR="$USERHOME/dev/configs"
@@ -11,9 +11,12 @@ ICONS_DIR="$USERHOME/.icons"
 PACKAGE_QUERY_REPO='https://aur.archlinux.org/package-query.git'
 YAY_REPO='https://aur.archlinux.org/yay.git'
 
+HOSTNAME=""
 ################################################################################
-. ./packages.sh
-. ./common.sh
+
+. ./_packages.sh
+. ./_common.sh
+. ./_post_setup.sh
 
 trap ctrl_c INT
 
@@ -25,12 +28,18 @@ check_root() {
     fi
 }
 create_user() {
+    echo "Enter username: "
+    read USERNAME
+    USERHOME="/home/$USERNAME"
     notify "Creating user $USERNAME"
     useradd --groups wheel --create-home --shell /bin/bash $USERNAME
     echo "Enter password for user $USERNAME"
     passwd $USERNAME
     create_home_dirs
     install_sudo
+
+    echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/01user
+    chmod 440 /etc/sudoers.d/01user
 }
 create_home_dirs() {
     mkdir --parents --verbose $USERHOME/screenshots \
@@ -65,15 +74,18 @@ build_yay() {
     cd /
 }
 install_sudo() {
-    notify "Installing sudo"
     command -v sudo
     if [ $? -eq 1 ]
     then
+        notify "Installing sudo"
         pacman --sync --noconfirm sudo
     fi
-    notify "Enabling sudo for group wheel"
-    echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/01wheel
-    chmod 440 /etc/sudoers.d/01wheel
+    if [ ! -f /etc/sudoers.d/01wheel ]
+    then
+        notify "Enabling sudo for group wheel"
+        echo "%wheel ALL=(ALL) ALL" > /etc/sudoers.d/01wheel
+        chmod 440 /etc/sudoers.d/01wheel
+    fi
 }
 install_and_run_reflector() {
     command -v reflector
@@ -93,16 +105,14 @@ install_packages() {
     fi
     notify "Installing base packages"
     sudo -u $USERNAME yay -S --noconfirm "${BASE_PACKAGES[@]}"
-    notify "Installing aur packages"
-    sudo -u $USERNAME yay -S --noconfirm "${AUR_PACKAGES[@]}"
 }
 cfg_link() {
     local cfg_file="$1"
-    ln --symbolic --verbose $GIT_CONF_DIR/$cfg_file $USERHOME/$cfg_file
+    ln --symbolic --force --verbose $GIT_CONF_DIR/$cfg_file $USERHOME/$cfg_file
 }
 etc_link() {
     local cfg_file="$1"
-    ln --symbolic --verbose $GIT_CONF_DIR$cfg_file $cfg_file
+    ln --symbolic --force --verbose $GIT_CONF_DIR$cfg_file $cfg_file
 }
 install_themes() {
     notify "Installing themes"
@@ -169,6 +179,7 @@ install_configs() {
     etc_files=(
         "/etc/lightdm/lightdm.conf"
         "/etc/lightdm/lightdm-webkit2-greeter.conf"
+        "/etc/mkinitcpio.conf"
     )
 
     for file in "${etc_files[@]}"
@@ -181,15 +192,55 @@ install_configs() {
     # For bspwm and sxhkd to know where the config is
     echo 'export XDG_CONFIG_DIR=$HOME/.config' >> /etc/profile
 }
-setup() {
-    ask "Create user?" create_user
-    ask "Install Packages?" install_packages
-    ask "Install configs?" install_configs
-    ask "Install themes?" install_themes
+################################################################################
 
-    chown --recursive $USERNAME:$USERNAME $USERHOME
+generate_locale() {
+   sed -r -i -e "s/#(en_US.UTF-8)/\1/g" /etc/locale.gen
+   sed -r -i -e "s/#(pl_PL.UTF-8)/\1/g" /etc/locale.gen
+   locale-gen
+}
+set_lang() {
+    local lang="$1"
+    echo "LANG=$lang" > /etc/locale.conf
+}
+set_keymap() {
+    local keymap="$1"
+    echo "KEYMAP=$keymap" > /etc/vconsole.conf
+}
+set_timezone() {
+    local region="$1"
+    local city="$2"
+    ln -sfv /usr/share/zoneinfo/$region/$city /etc/localtime
+    if [ $? == 0 ]
+    then
+        hwclock --systohc
+    fi
+}
+set_hostname() {
+    echo "Enter hostname: "
+    read HOSTNAME
+    echo $HOSTNAME > /etc/hostname
+}
+create_hosts() {
+    echo "127.0.0.1     localhost
+::1         localhost" > /etc/hosts
 }
 
 ################################################################################
 
-setup
+setup() {
+    create_hosts
+    generate_locale
+    set_lang "en_US.UTF-8"
+    set_keymap "pl"
+    set_timezone "Europe" "Warsaw"
+    set_hostname
+
+    ask "Create user?" create_user
+    ask "Install Packages?" install_packages
+    ask "Install configs?" install_configs
+    ask "Install themes?" install_themes
+    ask "Run post setup?" post_setup
+
+    chown --recursive $USERNAME:$USERNAME $USERHOME
+}
