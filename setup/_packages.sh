@@ -57,6 +57,7 @@ BASE_PACKAGES=(
     'powertop'
     'pulseaudio'
     'python-pip'
+    'qemu'
     'ranger'
     'redshift'
     'ripgrep'
