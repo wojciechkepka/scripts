@@ -1,9 +1,10 @@
 #!/bin/bash
 
-. ./_setup.sh
+. ./_common.sh
 
 LOCATION=$1
-TMPSCRIPTS=$LOCATION/tmp/scripts
+TMPSCRIPTS=/bld/scripts
+TMPLOCAL=$LOCATION/$TMPSCRIPTS
 
 if [ -z "$LOCATION" ]
 then
@@ -12,7 +13,6 @@ then
 
     exit 1
 fi
-
 
 PACSTRAP_PKGS=(
     'base'
@@ -23,14 +23,26 @@ PACSTRAP_PKGS=(
     'dhcpcd'
 )
 
-notify "Bootstraping base system to $LOCATION"
-saferun pacstrap $LOCATION ${PACSTRAP_PKGS[@]}
+bootstrap_pkgs() {
+    notify "Bootstraping base system to $LOCATION"
+    saferun pacstrap $LOCATION ${PACSTRAP_PKGS[@]}
+}
 
-notify "Generating fstab"
-genfstab -U $LOCATION >> $LOCATION/etc/fstab
+generate_fstab() {
+    notify "Generating fstab"
+    genfstab -U $LOCATION >> $LOCATION/etc/fstab
+}
 
-notify "Preparing setup scripts"
-mkdir -p $TMPSCRIPTS
-saferun cp ./* $TMPSCRIPTS
+run_setup() {
+    notify "Preparing setup scripts"
+    mkdir -p $TMPLOCAL
+    saferun cp ./* $TMPLOCAL
 
-saferun arch-chroot $LOCATION $TMPSCRIPTS/_setup.sh
+    saferun arch-chroot $LOCATION bash -c "cd $TMPSCRIPTS && bash _setup.sh"
+
+    rm -rf $TMPLOCAL
+}
+
+ask "Bootstrap initial packages?" bootstrap_pkgs
+ask "Generate fstab?" generate_fstab
+ask "Run setup?" run_setup
