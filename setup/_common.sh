@@ -45,10 +45,11 @@ err() {
 }
 
 saferun() {
-    $@
+    local cmd=$@
+    $($cmd)
     if [ $? != 0 ]
     then
-        err "failed running '$@'. Error code: '$?'"
+        err "failed running '${cmd[@]}' Error code: '$?'"
         exit 1
     fi
 }
