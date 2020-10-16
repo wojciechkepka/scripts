@@ -46,7 +46,7 @@ err() {
 
 saferun() {
     local cmd=$@
-    $($cmd)
+    eval $cmd
     if [ $? != 0 ]
     then
         err "failed running '${cmd[@]}' Error code: '$?'"
