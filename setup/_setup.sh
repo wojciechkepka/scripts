@@ -244,3 +244,5 @@ setup() {
 
     chown --recursive $USERNAME:$USERNAME $USERHOME
 }
+
+setup
