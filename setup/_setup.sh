@@ -8,10 +8,10 @@ XDG_CONF_DIR="$USERHOME/.config"
 THEME_DIR="$USERHOME/.themes"
 ICONS_DIR="$USERHOME/.icons"
 
-PACKAGE_QUERY_REPO='https://aur.archlinux.org/package-query.git'
-YAY_REPO='https://aur.archlinux.org/yay.git'
+ARCH_URL='https://aur.archlinux.org'
+PACKAGE_QUERY_REPO="$ARCH_URL/package-query.git"
+YAY_REPO="$ARCH_URL/yay.git"
 
-HOSTNAME=""
 ################################################################################
 
 . ./_packages.sh
