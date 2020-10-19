@@ -196,9 +196,12 @@ install_configs() {
 ################################################################################
 
 generate_locale() {
-   sed -r -i -e "s/#(en_US.UTF-8)/\1/g" /etc/locale.gen
-   sed -r -i -e "s/#(pl_PL.UTF-8)/\1/g" /etc/locale.gen
-   locale-gen
+    for locale in "$@"
+    do
+        sed -r -i -e "s/#($locale)/\1/g" /etc/locale.gen
+    done
+
+    locale-gen
 }
 set_lang() {
     local lang="$1"
@@ -231,7 +234,7 @@ create_hosts() {
 
 setup() {
     create_hosts
-    generate_locale
+    generate_locale "en_US.UTF-8" "en_GB.UTF-8" "pl_PL.UTF-8"
     set_lang "en_US.UTF-8"
     set_keymap "pl"
     set_timezone "Europe" "Warsaw"
