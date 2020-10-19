@@ -149,6 +149,7 @@ install_configs() {
     conf_files=(
         ".bashrc"
         ".gtkrc-2.0"
+        ".gitconfig"
         ".newsboat"
         ".tmux.conf"
         ".xinitrc"
