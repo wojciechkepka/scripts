@@ -5,12 +5,17 @@
 import os
 import subprocess
 import sys
+import shutil
+import tempfile
+import tty
+import termios
 from pathlib import Path
 
 ################################################################################
 
 BASE_PKGS = [
     "base",
+    "base-devel",
     "linux",
     "linux-firmware",
     "lvm2",
@@ -19,26 +24,164 @@ BASE_PKGS = [
     "python",
 ]
 
+PKGS = [
+    "alacritty",  # <3<3<3
+    "alsa-firmware",
+    "alsa-utils",
+    "amd-ucode",
+    "bat",
+    "bspwm",
+    "ccls",
+    "chrony",
+    "ctags",
+    "dhcpcd",
+    "dkms",
+    "dunst",  # notification server
+    "exa",  # better ls
+    "fd",  # better find
+    "feh",  # Image viewer
+    "filezilla",
+    "firefox",
+    "flameshot",  # Lightweight screenshot tool
+    "git",
+    "gnome-keyring",
+    "gpick",  # Color picker
+    "htop",
+    "iw",  # WIFI
+    "iwd",
+    "libimobiledevice",
+    "libnotify",
+    "lightdm",
+    "lightdm-webkit2-greeter",
+    "lightdm-webkit-theme-litarval",
+    "linux-headers",
+    "lvm2",
+    "man-db",
+    "man-pages",
+    "mupdf",
+    "nautilus",
+    "neovim",
+    "net-tools",
+    "newsboat",  # rss reader
+    "noto-fonts-emoji",
+    "nodejs",  # for coc
+    "npm",
+    "ntfs-3g",
+    "openssh",
+    "openvpn",
+    "os-prober",
+    "papirus-icon-theme",
+    "peek",
+    "perf",
+    "perl-cgi",
+    "picom",  # new compton
+    "pidgin",
+    "pidgin-libnotify",
+    "powerline-fonts",
+    "powertop",
+    "pulseaudio",
+    "python-pip",
+    "qemu",
+    "ranger",
+    "redshift",
+    "ripgrep",
+    "rofi",  # menu and app launcher
+    "sudo",
+    "sxhkd",  # keybinding daemon
+    "sysstat",
+    "termite",
+    "tcpdump",
+    "thunderbird",
+    "tmux",
+    "ttf-fira-code",
+    "ttf-font-awesome",
+    "ttf-hack",
+    "unzip",
+    "usbutils",
+    "vim",
+    "vlc",
+    "w3m",  # for image display in Ranger
+    "wget",
+    "xclip",
+    "xorg-server",
+    "xorg-xinit",
+    "xorg-xrandr",
+    "zathura",  # document viewer with nice dark mode
+    "zathura-pdf-mupdf",
+]
+
+FILENAME = Path(__file__)
+FULLPATH = FILENAME.absolute()
+
+ARCH_URL = "https://aur.archlinux.org"
+PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
+YAY_REPO = f"{ARCH_URL}/yay.git"
+GIT_CONF_REPO = "https://github.com/wojciechkepka/configs"
+
+LOCALES = ["en_US.UTF-8", "en_GB.UTF-8", "pl_PL.UTF-8"]
+LANG = "en_US.UTF-8"
+KEYMAP = "pl"
+REGION = "Europe"
+CITY = "Warsaw"
+
 
 ################################################################################
+BLUE = "\033[0;34m"
+CYAN = "\033[0;36m"
+GREEN = "\033[0;32m"
+YELLOW = "\033[0;33m"
+RED = "\033[0;31m"
+BWHITE = "\033[1;37m"
+NC = "\033[0m"
 
 
 def eprint(msg: str):
+    sys.stderr.write(RED)
     sys.stderr.write(msg)
+    sys.stdout.write(NC)
 
 
-def run(cmd: str, args: [str], display=True, quit=False):
+def inp(msg: str) -> str:
+    sys.stdout.write(CYAN + msg + BWHITE)
+    inp = input()
+    sys.stdout.write(NC)
+    return inp
+
+
+def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=True):
     print(f"Running `{cmd} {' '.join(args)}`")
-    p = subprocess.Popen([cmd] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (stdout, stderr) = p.communicate()
-    if p.returncode != 0:
-        if display:
-            eprint("ERROR: " + stderr.decode("utf-8"))
-        if quit:
-            sys.exit(1)
+    p = (
+        subprocess.Popen([cmd] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if not redirect
+        else subprocess.Popen([cmd] + args, stdout=sys.stdout, stderr=sys.stderr)
+    )
+    if follow:
+        sys.stdout.write(GREEN)
+        for c in iter(lambda: p.stdout.read(1), b""):
+            try:
+                sys.stdout.write(c.decode("utf-8"))
+            except:
+                pass
+        sys.stdout.write(NC)
+        sys.stderr.write(RED)
+        for c in iter(lambda: p.stderr.read(1), b""):
+            try:
+                sys.stdout.write(c.decode("utf-8"))
+            except:
+                pass
+        sys.stdout.write(NC)
     else:
-        if display:
-            print(stdout.decode("utf-8"))
+        (stdout, stderr) = p.communicate()
+        if p.returncode != 0:
+            if display:
+                eprint("ERROR: " + stderr.decode("utf-8"))
+            if quit:
+                sys.exit(1)
+        else:
+            if display and stdout:
+                sys.stdout.write(GREEN)
+                print(stdout.decode("utf-8"))
+                sys.stdout.write(NC)
 
 
 def bash(cmd: str, quit=False):
@@ -46,47 +189,395 @@ def bash(cmd: str, quit=False):
 
 
 def ask_user_yn(msg: str, f, *args):
-    sys.stdout.write(msg + " y/n: ")
+    sys.stdout.write(CYAN + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
+    sys.stdout.flush()
     while True:
-        resp = input()
-        if resp == "y":
+        ch = getch()
+        if ch == "y":
+            sys.stdout.write(BWHITE + ch + "\n" + NC)
             f(*args)
-            return
-        elif resp == "n":
-            return
+            break
+        elif ch == "n":
+            sys.stdout.write(BWHITE + ch + "\n" + NC)
+            break
+        elif ch == "q":
+            sys.stdout.write(BWHITE + ch + "\n" + NC)
+            raise KeyboardInterrupt
+
+
+def getch():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
 
 
 ################################################################################
 
 
-def gen_fstab(location: str):
-    bash(f"/usr/bin/genfstab -U {location} >> {location}/etc/fstab", quit=True)
+class System(object):
+    @staticmethod
+    def chmod(flags: str, f: str):
+        run("chmod", [flags, "--verbose", f])
+
+    @staticmethod
+    def cp(f1: str, f2: str):
+        run("cp", ["--verbose", f1, f2])
+
+    @staticmethod
+    def mkdir(d: str):
+        if not Path(d).exists():
+            os.mkdir(d)
+
+    @staticmethod
+    def create_user(user: str):
+        run(
+            "useradd",
+            [
+                "--groups",
+                "wheel",
+                "--create-home",
+                "--shell",
+                "/bin/bash",
+                user,
+            ],
+            quit=True,
+        )
+        run("passwd", [user])
+
+    @staticmethod
+    def bins_exist(bins: [str]):
+        for b in bins:
+            if shutil.which(b) is None:
+                return False
+        return True
+
+    @staticmethod
+    def install_pkgs(pkgs):
+        run("/usr/bin/pacman", ["--sync", "--noconfirm"] + pkgs)
+
+    @staticmethod
+    def install_pkg_if_bin_not_exists(pkg):
+        if not System.bins_exist([pkg]):
+            System.install_pkgs([pkg])
+
+    @staticmethod
+    def install_sudo():
+        System.install_pkg_if_bin_not_exists("sudo")
+
+    @staticmethod
+    def install_and_run_reflector():
+        System.install_pkg_if_bin_not_exists("reflector")
+        run(
+            "reflector",
+            ["-l", "100", "--sort", "rate", "--save", "/etc/pacman.d/mirrorlist"],
+        )
+
+    @staticmethod
+    def build_yay():
+        System.install_sudo()
+
+        bld_pkgs = ["git", "wget", "go", "fakeroot"]
+        if not System.bins_exist(bld_pkgs):
+            System.install_pkgs(bld_pkgs)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            run("git", ["clone", PACKAGE_QUERY_REPO, f"{tmpdir}/package-query"])
+            run("git", ["clone", YAY_REPO, f"{tmpdir}/yay"])
+            run("chown", ["-R", "nobody:nobody", tmpdir])
+
+            System.sudo_nopasswd("nobody")
+            System.mkdir(f"/.cache")
+            System.mkdir(f"/.cache/go-build")
+            run("chown", ["-R", "nobody:nobody", "/.cache"])
+
+            # bash(
+                # f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm"
+            # )
+            bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
+
+            System.rm_sudo_nopasswd("nobody")
+
+    @staticmethod
+    def gen_locale(locales: [str]):
+        with open("/etc/locale.gen", "a+") as f:
+            for line in f.readlines():
+                for locale in locales:
+                    if line.startswith(f"#{locale}"):
+                        line = locale
+
+        run("locale-gen", [])
+
+    @staticmethod
+    def set_lang(lang: str):
+        with open("/etc/locale.conf", "w+") as f:
+            f.write("LANG=" + lang)
+
+    @staticmethod
+    def set_keymap(keymap: str):
+        with open("/etc/vconsole.conf", "w+") as f:
+            f.write("KEYMAP=" + keymap)
+
+    @staticmethod
+    def set_timezone(region: str, city: str):
+        if region and city:
+            run(
+                "ln",
+                [
+                    "--symbolic",
+                    "--force",
+                    "--verbose",
+                    f"/usr/share/zoneinfo/{region}/{city}",
+                    "/etc/localtime",
+                ],
+            )
+
+    @staticmethod
+    def set_hostname(hostname: str):
+        if hostname:
+            with open("/etc/hostname", "w+") as f:
+                f.write(hostname)
+
+    @staticmethod
+    def create_hosts():
+        with open("/etc/hosts", "w+") as f:
+            f.write("127.0.0.1      localhost")
+            f.write("::1            localhost")
+
+    @staticmethod
+    def sudo_nopasswd(user: str):
+        with open(f"/etc/sudoers.d/01{user}", "w+") as f:
+            f.write(f"{user} ALL=(ALL) NOPASSWD: ALL\n")
+
+    @staticmethod
+    def rm_sudo_nopasswd(user: str):
+        os.remove(f"/etc/sudoers.d/01{user}")
 
 
-def install_pkgs(location: str, pkgs: [str]):
-    run("/usr/bin/pacstrap", [location] + pkgs, quit=True)
+class Init(object):
+    def __init__(self, location: str):
+        self.location = location
+
+    def gen_fstab(self):
+        bash(
+            f"/usr/bin/genfstab -U {self.location} >> {self.location}/etc/fstab",
+            quit=True,
+        )
+
+    def install_pkgs(self, pkgs: [str]):
+        run("/usr/bin/pacstrap", [self.location] + pkgs, quit=True)
+
+    def arch_chroot(self, cmd: str):
+        run(
+            "/usr/bin/arch-chroot",
+            [self.location, "/bin/bash", "-c", cmd],
+            quit=True,
+            redirect=True,
+            follow=False,
+        )
+
+    def copy_self(self):
+        System.cp(str(FULLPATH), f"{self.location}/{FILENAME}")
+
+    def init_setup(self):
+        self.copy_self()
+        self.arch_chroot(f"/usr/bin/python {FILENAME} setup")
 
 
-def arch_chroot(location: str, cmd: str):
-    run("/usr/bin/arch-chroot", [location, "/bin/bash", "-c", cmd], quit=True)
+class Setup(object):
+    def __init__(self):
+        self.username = ""
+        self.userhome = ""
+        self.setup()
 
+    def git_conf_dir(self) -> str:
+        return f"{self.userhome}/dev/configs"
 
-def copy_self(location: str):
-    current_location = Path(__file__).absolute()
-    filename = Path(__file__)
+    def xdg_conf_dir(self) -> str:
+        return f"{self.userhome}/.config"
 
-    run("/usr/bin/cp", [current_location, f"{location}/{filename}"])
+    def theme_dir(self) -> str:
+        return f"{self.userhome}/.themes"
 
+    def icons_dir(self) -> str:
+        return f"{self.userhome}/.icons"
 
-def init_setup(location: str):
-    filename = Path(__file__)
+    def create_user(self):
+        self.username = inp("Enter username: ")
+        self.userhome = f"/home/{self.username}"
 
-    copy_self(location)
-    arch_chroot(location, f"python {filename} setup")
+        System.create_user(self.username)
+        System.sudo_nopasswd(self.username)
 
+    def create_home_dirs(self):
+        dirs = [
+            f"{self.userhome}/screenshots",
+            f"{self.userhome}/wallpapers",
+            f"{self.userhome}/Downloads",
+            f"{self.userhome}/Documents",
+            self.theme_dir(),
+            self.icons_dir(),
+        ]
 
-def setup():
-    print("Setup!")
+        for d in dirs:
+            System.mkdir(d)
+
+    def install_pkgs(self):
+        ask_user_yn("Run Reflector?", System.install_and_run_reflector)
+        if shutil.which("yay") is None:
+            System.build_yay()
+
+        run("sudo", ["-u", self.username, "yay", "-S", "--noconfirm"] + PKGS)
+
+    def link(self, f: str, p=""):
+        run(
+            "ln",
+            [
+                "--symbolic",
+                "--force",
+                "--verbose",
+                f"{self.git_conf_dir()}/{f}",
+                f"{p}/{f}" if p else f,
+            ],
+        )
+
+    def cfg_link(self, f: str):
+        self.link(f, self.userhome)
+
+    def install_themes(self):
+        run(
+            "tar",
+            [
+                "--extract",
+                f"--file={self.git_conf_dir()}/themes/Sweet-Dark.tar.xz",
+                f"--directory={self.theme_dir()}",
+            ],
+        )
+        run(
+            "tar",
+            [
+                "--extract",
+                f"--file={self.git_conf_dir()}/themes/Sweet-Purple.tar.xz",
+                f"--directory={self.theme_dir()}",
+            ],
+        )
+        run(
+            "tar",
+            [
+                "--extract",
+                f"--file={self.git_conf_dir()}/themes/Sweet-Teal.tar.xz",
+                f"--directory={self.theme_dir()}",
+            ],
+        )
+        run(
+            "unzip",
+            [
+                f"{self.git_conf_dir()}/themes/Solarized-Dark-Orange_2.0.1.zip",
+                "-d",
+                self.theme_dir(),
+            ],
+        )
+        run(
+            "git",
+            [
+                "clone",
+                "https://github.com/wojciechkepka/gruvbox-gtk",
+                f"{self.theme_dir()}/gruvbox-gtk",
+            ],
+        )
+        run(
+            "git",
+            ["clone", "https://github.com/wojciechkepka/Aritim-Dark", f"/tmp/aritim"],
+        )
+        run("mv", ["/tmp/aritim/GTK", "{self.theme_dir()}/Aritim-Dark"])
+
+    def install_configs(self):
+        conf_dirs = [
+            self.git_conf_dir(),
+            self.xdg_conf_dir(),
+            "/etc/lightdm",
+            f"{self.xdg_conf_dir()}/alacritty",
+            f"{self.xdg_conf_dir()}/bspwm",
+            f"{self.xdg_conf_dir()}/nvim",
+            f"{self.xdg_conf_dir()}/polybar",
+            f"{self.xdg_conf_dir()}/sxhkd",
+            f"{self.xdg_conf_dir()}/termite",
+            f"{self.xdg_conf_dir()}/gtk-3.0",
+            f"{self.xdg_conf_dir()}/dunst",
+            f"{self.xdg_conf_dir()}/rofi",
+            f"{self.xdg_conf_dir()}/picom",
+            f"{self.xdg_conf_dir()}/zathura",
+            f"{self.userhome}/.newsboat",
+        ]
+
+        for d in conf_dirs:
+            System.mkdir(d)
+
+        conf_files = [
+            ".bashrc",
+            ".gtkrc-2.0",
+            ".gitconfig",
+            ".newsboat",
+            ".tmux.conf",
+            ".xinitrc",
+            ".Xresources",
+            ".config/alacritty/alacritty.yml",
+            ".config/bspwm/bspwmrc",
+            ".config/nvim/init.vim",
+            ".config/nvim/coc-settings.json",
+            ".config/polybar/colors.ini",
+            ".config/polybar/config.ini",
+            ".config/polybar/modules.ini",
+            ".config/sxhkd/sxhkdrc",
+            ".config/termite/config",
+            ".config/dunst/dunstrc",
+            ".config/gtk-3.0/settings.ini",
+            ".config/gtk-3.0/gtk.css",
+            ".config/picom/picom.conf",
+            ".config/rofi/config.rasi",
+            ".config/zathura/zathurarc",
+            ".config/starship.toml",
+        ]
+
+        for f in conf_files:
+            self.cfg_link(f)
+
+        etc_files = [
+            "/etc/lightdm/lightdm.conf",
+            "/etc/lightdm/lightdm-webkit2-greeter.conf",
+            "/etc/mkinitcpio.conf",
+        ]
+
+        for f in etc_files:
+            self.link(f)
+
+        System.chmod("+x", f"{self.git_conf_dir()}/.config/bspwm/bspwmrc")
+
+        with open("/etc/profile", "a") as f:
+            f.write("export XDG_CONFIG_DIR=$HOME/.config")
+
+    def datetime_location_setup(self):
+        s = System
+        s.gen_locale(LOCALES)
+        s.set_lang(LANG)
+        s.set_keymap(KEYMAP)
+        s.set_timezone(REGION, CITY)
+        hostname = inp("Enter hostname: ")
+        s.set_hostname(hostname)
+        s.create_hosts()
+
+    def setup(self):
+        ask_user_yn("Create user?", self.create_user)
+        ask_user_yn(
+            "Initialize localization/time/hostname?", self.datetime_location_setup
+        )
+        ask_user_yn("Install packages?", self.install_pkgs)
+        ask_user_yn("Install configs?", self.install_configs)
+        ask_user_yn("Install themes?", self.install_themes)
 
 
 ################################################################################
@@ -95,17 +586,21 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(
             f"USAGE: \
-        {Path(__file__)} <init | setup>"
+        {FILENAME} <init | setup>"
         )
         sys.exit(1)
 
     cmd = sys.argv[1]
 
-    if cmd == "init":
-        location = input("Enter new installation location: ")
-        ask_user_yn("Generate fstab?", gen_fstab, location)
-        ask_user_yn("Install base packages?", install_pkgs, location, BASE_PKGS)
-        ask_user_yn("Run setup?", arch_chroot, location, f"{Path(__file__)} setup")
-        init_setup(location)
-    elif cmd == "setup":
-        setup()
+    try:
+        if cmd == "init":
+            location = inp("Enter new installation location: ")
+            init = Init(location)
+            ask_user_yn("Generate fstab?", init.gen_fstab)
+            ask_user_yn("Install base packages?", init.install_pkgs, BASE_PKGS)
+            ask_user_yn("Run setup?", init.init_setup)
+        elif cmd == "setup":
+            Setup()
+    except KeyboardInterrupt:
+        print("Exiting...")
+        sys.exit(0)
