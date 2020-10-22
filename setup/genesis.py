@@ -80,7 +80,7 @@ def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=
     else:
         (stdout, stderr) = p.communicate()
         if p.returncode != 0:
-            if display:
+            if display and stderr:
                 eprint("ERROR: " + stderr.decode("utf-8"))
             if quit:
                 sys.exit(1)
@@ -140,7 +140,12 @@ class System(object):
     @staticmethod
     def mkdir(d: str):
         if not Path(d).exists():
-            os.mkdir(d)
+            os.makedirs(d)
+
+    @staticmethod
+    def gitclone(repo: str, where=""):
+        System.install_pkg_if_bin_not_exists("git")
+        run("git", ["clone", repo, where] if where else ["clone", repo])
 
     @staticmethod
     def create_user(user: str):
@@ -195,8 +200,8 @@ class System(object):
             System.install_pkgs(bld_pkgs)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            run("git", ["clone", PACKAGE_QUERY_REPO, f"{tmpdir}/package-query"])
-            run("git", ["clone", YAY_REPO, f"{tmpdir}/yay"])
+            System.gitclone(PACKAGE_QUERY_REPO, f"{tmpdir}/package-query")
+            System.gitclone(YAY_REPO, f"{tmpdir}/yay")
             run("chown", ["-R", "nobody:nobody", tmpdir])
 
             System.sudo_nopasswd("nobody")
@@ -394,19 +399,13 @@ class Setup(object):
                 self.theme_dir(),
             ],
         )
-        run(
-            "git",
-            [
-                "clone",
-                "https://github.com/wojciechkepka/gruvbox-gtk",
-                f"{self.theme_dir()}/gruvbox-gtk",
-            ],
+        System.gitclone(
+            "https://github.com/wojciechkepka/gruvbox-gtk",
+            f"{self.theme_dir()}/gruvbox-gtk",
         )
-        run(
-            "git",
-            ["clone", "https://github.com/wojciechkepka/Aritim-Dark", f"/tmp/aritim"],
-        )
-        run("mv", ["/tmp/aritim/GTK", "{self.theme_dir()}/Aritim-Dark"])
+        System.gitclone("https://github.com/wojciechkepka/Aritim-Dark", f"{self.theme_dir()}/aritim")
+        run("mv", [f"{self.theme_dir()}/aritim/GTK", f"{self.theme_dir()}/Aritim-Dark"])
+        os.removedirs(f"{self.theme_dir()}/aritim",)
 
     def install_configs(self):
         conf_dirs = [
@@ -429,6 +428,8 @@ class Setup(object):
 
         for d in conf_dirs:
             System.mkdir(d)
+
+        System.gitclone(GIT_CONF_REPO, self.git_conf_dir())
 
         conf_files = [
             ".bashrc",
