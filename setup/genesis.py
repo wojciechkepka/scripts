@@ -238,6 +238,11 @@ class System(object):
             f.write("KEYMAP=" + keymap)
 
     @staticmethod
+    def setxkbmap(keymap: str):
+        if shutil.which("setxkbmap") is not None:
+            run("setxkbmap", [keymap])
+
+    @staticmethod
     def set_timezone(region: str, city: str):
         if region and city:
             run(
