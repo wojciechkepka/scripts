@@ -35,6 +35,7 @@ CITY = "Warsaw"
 
 
 ################################################################################
+
 BLUE = "\033[0;34m"
 CYAN = "\033[0;36m"
 GREEN = "\033[0;32m"
@@ -152,6 +153,17 @@ class System(object):
     def gitclone(repo: str, where=""):
         System.install_pkg_if_bin_not_exists("git")
         run("git", ["clone", repo, where] if where else ["clone", repo])
+
+    @staticmethod
+    def nvim(cmd: str):
+        run("nvim", ["-c", f'"{cmd}"'])
+
+    @staticmethod
+    def link(base: str, f: str, out: str):
+        run(
+            "ln",
+            ["--symbolic", "--force", "--verbose", f"{base}/{f}", f"{out}/{f}"],
+        )
 
     @staticmethod
     def create_user(user: str):
@@ -364,21 +376,6 @@ class Setup(object):
 
         run("sudo", ["-u", self.username, "yay", "-S", "--noconfirm"] + pkgs)
 
-    def link(self, f: str, p=""):
-        run(
-            "ln",
-            [
-                "--symbolic",
-                "--force",
-                "--verbose",
-                f"{self.git_conf_dir()}/{f}",
-                f"{p}/{f}" if p else f,
-            ],
-        )
-
-    def cfg_link(self, f: str):
-        self.link(f, self.userhome)
-
     def install_themes(self):
         if Path(self.theme_dir()).exists():
             shutil.rmtree(self.theme_dir())
@@ -421,13 +418,9 @@ class Setup(object):
             f"{REPO_BASE}/gruvbox-gtk",
             f"{self.theme_dir()}/gruvbox-gtk",
         )
-        System.gitclone(
-            f"{REPO_BASE}/Aritim-Dark", f"{self.theme_dir()}/aritim"
-        )
+        System.gitclone(f"{REPO_BASE}/Aritim-Dark", f"{self.theme_dir()}/aritim")
         run("mv", [f"{self.theme_dir()}/aritim/GTK", f"{self.theme_dir()}/Aritim-Dark"])
-        shutil.rmtree(
-            f"{self.theme_dir()}/aritim"
-        )
+        shutil.rmtree(f"{self.theme_dir()}/aritim")
 
     def install_configs(self):
         conf_dirs = [
@@ -480,7 +473,7 @@ class Setup(object):
         ]
 
         for f in conf_files:
-            self.cfg_link(f)
+            System.link(self.git_conf_dir(), f, self.userhome)
 
         etc_files = [
             "/etc/lightdm/lightdm.conf",
@@ -489,7 +482,7 @@ class Setup(object):
         ]
 
         for f in etc_files:
-            self.link(f)
+            System.link(self.git_conf_dir(), f, "/")
 
         System.chmod("+x", f"{self.git_conf_dir()}/.config/bspwm/bspwmrc")
 
@@ -520,6 +513,18 @@ class Setup(object):
         s.set_hostname(hostname)
         s.create_hosts()
 
+    def install_nvim_plugins(self):
+        System.install_pkg_if_bin_not_exists("nvim")
+        p = self.xdg_conf_dir() + "/nvim/init.vim"
+        if Path(p).exists():
+            System.nvim("PlugInstall|q|q")
+        else:
+            eprint(f"Missing nvim config file at {p}")
+
+    def install_coc_extensions(self):
+        for ext in PKGS["coc"]:
+            System.nvim(f"CocInstall -sync {ext}|q")
+
     def setup(self):
         ask_user_yn("Create user?", self.create_user)
         ask_user_yn(
@@ -529,6 +534,8 @@ class Setup(object):
         ask_user_yn("Install AUR packages?", self.install_pkgs, PKGS["aur"])
         ask_user_yn("Install configs?", self.install_configs)
         ask_user_yn("Install themes?", self.install_themes)
+        ask_user_yn("Install nvim plugins?", self.install_nvim_plugins)
+        ask_user_yn("Install coc extensions?", self.install_coc_extensions)
 
 
 ################################################################################
