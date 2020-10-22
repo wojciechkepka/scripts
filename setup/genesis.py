@@ -22,7 +22,8 @@ FULLPATH = FILENAME.absolute()
 ARCH_URL = "https://aur.archlinux.org"
 PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
 YAY_REPO = f"{ARCH_URL}/yay.git"
-GIT_CONF_REPO = "https://github.com/wojciechkepka/configs"
+REPO_BASE = "https://github.com/wojciechkepka"
+GIT_CONF_REPO = f"{REPO_BASE}/configs"
 PKG_URL = "https://wkepka.dev/static/pkgs"
 PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
 
@@ -417,11 +418,11 @@ class Setup(object):
             ],
         )
         System.gitclone(
-            "https://github.com/wojciechkepka/gruvbox-gtk",
+            f"{REPO_BASE}/gruvbox-gtk",
             f"{self.theme_dir()}/gruvbox-gtk",
         )
         System.gitclone(
-            "https://github.com/wojciechkepka/Aritim-Dark", f"{self.theme_dir()}/aritim"
+            f"{REPO_BASE}/Aritim-Dark", f"{self.theme_dir()}/aritim"
         )
         run("mv", [f"{self.theme_dir()}/aritim/GTK", f"{self.theme_dir()}/Aritim-Dark"])
         shutil.rmtree(
