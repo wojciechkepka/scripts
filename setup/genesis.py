@@ -161,7 +161,7 @@ class System(object):
             ],
             quit=True,
         )
-        run("passwd", [user])
+        run("passwd", [user], redirect=True, follow=False)
 
     @staticmethod
     def bins_exist(bins: [str]):
