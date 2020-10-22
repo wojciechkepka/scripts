@@ -421,7 +421,7 @@ class Setup(object):
         )
         System.gitclone("https://github.com/wojciechkepka/Aritim-Dark", f"{self.theme_dir()}/aritim")
         run("mv", [f"{self.theme_dir()}/aritim/GTK", f"{self.theme_dir()}/Aritim-Dark"])
-        os.removedirs(f"{self.theme_dir()}/aritim",)
+        shutil.rmtree(f"{self.theme_dir()}/aritim",)
 
     def install_configs(self):
         conf_dirs = [
