@@ -159,11 +159,26 @@ class System(object):
         run("nvim", ["-c", f'"{cmd}"'])
 
     @staticmethod
-    def link(base: str, f: str, out: str):
+    def extar(f: str, to: str):
+        run(
+            "tar",
+            [
+                "--extract",
+                f"--file={f}",
+                f"--directory={to}",
+            ],
+        )
+
+    @staticmethod
+    def _link(f: str, to: str):
         run(
             "ln",
-            ["--symbolic", "--force", "--verbose", f"{base}/{f}", f"{out}/{f}"],
+            ["--symbolic", "--force", "--verbose", f, to],
         )
+
+    @staticmethod
+    def link(base: str, f: str, out: str):
+        System._link(f"{base}/{f}", f"{out}/{f}")
 
     @staticmethod
     def create_user(user: str):
@@ -263,16 +278,7 @@ class System(object):
     @staticmethod
     def set_timezone(region: str, city: str):
         if region and city:
-            run(
-                "ln",
-                [
-                    "--symbolic",
-                    "--force",
-                    "--verbose",
-                    f"/usr/share/zoneinfo/{region}/{city}",
-                    "/etc/localtime",
-                ],
-            )
+            System._link(f"/usr/share/zoneinfo/{region}/{city}", "/etc/localtime")
 
     @staticmethod
     def set_hostname(hostname: str):
@@ -382,29 +388,14 @@ class Setup(object):
 
         os.makedirs(self.theme_dir())
 
-        run(
-            "tar",
-            [
-                "--extract",
-                f"--file={self.git_conf_dir()}/themes/Sweet-Dark.tar.xz",
-                f"--directory={self.theme_dir()}",
-            ],
+        System.extar(
+            self.git_conf_dir() + "/themes/Sweet-Dark.tar.xz", self.theme_dir()
         )
-        run(
-            "tar",
-            [
-                "--extract",
-                f"--file={self.git_conf_dir()}/themes/Sweet-Purple.tar.xz",
-                f"--directory={self.theme_dir()}",
-            ],
+        System.extar(
+            self.git_conf_dir() + "/themes/Sweet-Purple.tar.xz", self.theme_dir()
         )
-        run(
-            "tar",
-            [
-                "--extract",
-                f"--file={self.git_conf_dir()}/themes/Sweet-Teal.tar.xz",
-                f"--directory={self.theme_dir()}",
-            ],
+        System.extar(
+            self.git_conf_dir() + "/themes/Sweet-Teal.tar.xz", self.theme_dir()
         )
         run(
             "unzip",
