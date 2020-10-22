@@ -9,106 +9,12 @@ import shutil
 import tempfile
 import tty
 import termios
+import json
+import urllib.request
 from pathlib import Path
 
 ################################################################################
 
-BASE_PKGS = [
-    "base",
-    "base-devel",
-    "linux",
-    "linux-firmware",
-    "lvm2",
-    "mdadm",
-    "dhcpcd",
-    "python",
-]
-
-PKGS = [
-    "alacritty",  # <3<3<3
-    "alsa-firmware",
-    "alsa-utils",
-    "amd-ucode",
-    "bat",
-    "bspwm",
-    "ccls",
-    "chrony",
-    "ctags",
-    "dhcpcd",
-    "dkms",
-    "dunst",  # notification server
-    "exa",  # better ls
-    "fd",  # better find
-    "feh",  # Image viewer
-    "filezilla",
-    "firefox",
-    "flameshot",  # Lightweight screenshot tool
-    "git",
-    "gnome-keyring",
-    "gpick",  # Color picker
-    "htop",
-    "iw",  # WIFI
-    "iwd",
-    "libimobiledevice",
-    "libnotify",
-    "lightdm",
-    "lightdm-webkit2-greeter",
-    "lightdm-webkit-theme-litarval",
-    "linux-headers",
-    "lvm2",
-    "man-db",
-    "man-pages",
-    "mupdf",
-    "nautilus",
-    "neovim",
-    "net-tools",
-    "newsboat",  # rss reader
-    "noto-fonts-emoji",
-    "nodejs",  # for coc
-    "npm",
-    "ntfs-3g",
-    "openssh",
-    "openvpn",
-    "os-prober",
-    "papirus-icon-theme",
-    "peek",
-    "perf",
-    "perl-cgi",
-    "picom",  # new compton
-    "pidgin",
-    "pidgin-libnotify",
-    "powerline-fonts",
-    "powertop",
-    "pulseaudio",
-    "python-pip",
-    "qemu",
-    "ranger",
-    "redshift",
-    "ripgrep",
-    "rofi",  # menu and app launcher
-    "sudo",
-    "sxhkd",  # keybinding daemon
-    "sysstat",
-    "termite",
-    "tcpdump",
-    "thunderbird",
-    "tmux",
-    "ttf-fira-code",
-    "ttf-font-awesome",
-    "ttf-hack",
-    "unzip",
-    "usbutils",
-    "vim",
-    "vlc",
-    "w3m",  # for image display in Ranger
-    "wget",
-    "xclip",
-    "xorg-server",
-    "xorg-xinit",
-    "xorg-xrandr",
-    "zathura",  # document viewer with nice dark mode
-    "zathura-pdf-mupdf",
-]
 
 FILENAME = Path(__file__)
 FULLPATH = FILENAME.absolute()
@@ -117,12 +23,15 @@ ARCH_URL = "https://aur.archlinux.org"
 PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
 YAY_REPO = f"{ARCH_URL}/yay.git"
 GIT_CONF_REPO = "https://github.com/wojciechkepka/configs"
+PKG_URL = "https://wkepka.dev/static/pkgs"
+PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
 
 LOCALES = ["en_US.UTF-8", "en_GB.UTF-8", "pl_PL.UTF-8"]
 LANG = "en_US.UTF-8"
 KEYMAP = "pl"
 REGION = "Europe"
 CITY = "Warsaw"
+
 
 
 ################################################################################
@@ -426,12 +335,15 @@ class Setup(object):
         for d in dirs:
             System.mkdir(d)
 
-    def install_pkgs(self):
+    def install_pkgs(self, pkgs: [str]):
         ask_user_yn("Run Reflector?", System.install_and_run_reflector)
         if shutil.which("yay") is None:
             System.build_yay()
 
-        run("sudo", ["-u", self.username, "yay", "-S", "--noconfirm"] + PKGS)
+        if not self.username:
+            self.username = inp("Enter username: ")
+
+        run("sudo", ["-u", self.username, "yay", "-S", "--noconfirm"] + pkgs)
 
     def link(self, f: str, p=""):
         run(
@@ -575,7 +487,8 @@ class Setup(object):
         ask_user_yn(
             "Initialize localization/time/hostname?", self.datetime_location_setup
         )
-        ask_user_yn("Install packages?", self.install_pkgs)
+        ask_user_yn("Install community packages?", self.install_pkgs, PKGS["community"])
+        ask_user_yn("Install AUR packages?", self.install_pkgs, PKGS["aur"])
         ask_user_yn("Install configs?", self.install_configs)
         ask_user_yn("Install themes?", self.install_themes)
 
@@ -597,7 +510,7 @@ if __name__ == "__main__":
             location = inp("Enter new installation location: ")
             init = Init(location)
             ask_user_yn("Generate fstab?", init.gen_fstab)
-            ask_user_yn("Install base packages?", init.install_pkgs, BASE_PKGS)
+            ask_user_yn("Install base packages?", init.install_pkgs, PKGS["base"])
             ask_user_yn("Run setup?", init.init_setup)
         elif cmd == "setup":
             Setup()
