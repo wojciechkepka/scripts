@@ -374,6 +374,11 @@ class Setup(object):
         self.link(f, self.userhome)
 
     def install_themes(self):
+        if Path(self.theme_dir()).exists():
+            shutil.rmtree(self.theme_dir())
+
+        os.makedirs(self.theme_dir())
+
         run(
             "tar",
             [
