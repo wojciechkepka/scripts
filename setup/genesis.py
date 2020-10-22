@@ -55,6 +55,10 @@ def inp(msg: str) -> str:
     sys.stdout.write(NC)
     return inp
 
+def inp_or_default(msg: str, default):
+    x = inp(msg + f"(default - '{default}'): ")
+    return x if x else default
+
 
 def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=True):
     print(f"Running `{cmd} {' '.join(args)}`")
@@ -486,12 +490,26 @@ class Setup(object):
         with open("/etc/profile", "a") as f:
             f.write("export XDG_CONFIG_DIR=$HOME/.config")
 
+    def set_lang(self):
+        lang = inp_or_default("Enter system language", LANG)
+        System.set_lang(lang)
+
+    def set_keymap(self):
+        keymap = inp_or_default("Enter keymap", KEYMAP)
+        System.set_keymap(keymap)
+        System.setxkbmap(keymap)
+
+    def set_timezone(self):
+        region = inp_or_default("Enter region", REGION)
+        city = inp_or_default("Enter city", CITY)
+        System.set_timezone(region, city)
+
     def datetime_location_setup(self):
         s = System
         s.gen_locale(LOCALES)
-        s.set_lang(LANG)
-        s.set_keymap(KEYMAP)
-        s.set_timezone(REGION, CITY)
+        self.set_lang()
+        self.set_keymap()
+        self.set_timezone()
         hostname = inp("Enter hostname: ")
         s.set_hostname(hostname)
         s.create_hosts()
