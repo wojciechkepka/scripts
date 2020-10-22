@@ -549,3 +549,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Exiting...")
         sys.exit(0)
+    except Exception as e:
+        eprint(f"Unhandled exception - {e}")
+        sys.exit(1)
