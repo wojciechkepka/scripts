@@ -55,6 +55,7 @@ def inp(msg: str) -> str:
     sys.stdout.write(NC)
     return inp
 
+
 def inp_or_default(msg: str, default):
     x = inp(msg + f"(default - '{default}'): ")
     return x if x else default
@@ -419,9 +420,13 @@ class Setup(object):
             "https://github.com/wojciechkepka/gruvbox-gtk",
             f"{self.theme_dir()}/gruvbox-gtk",
         )
-        System.gitclone("https://github.com/wojciechkepka/Aritim-Dark", f"{self.theme_dir()}/aritim")
+        System.gitclone(
+            "https://github.com/wojciechkepka/Aritim-Dark", f"{self.theme_dir()}/aritim"
+        )
         run("mv", [f"{self.theme_dir()}/aritim/GTK", f"{self.theme_dir()}/Aritim-Dark"])
-        shutil.rmtree(f"{self.theme_dir()}/aritim",)
+        shutil.rmtree(
+            f"{self.theme_dir()}/aritim"
+        )
 
     def install_configs(self):
         conf_dirs = [
