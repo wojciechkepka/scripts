@@ -33,7 +33,6 @@ REGION = "Europe"
 CITY = "Warsaw"
 
 
-
 ################################################################################
 BLUE = "\033[0;34m"
 CYAN = "\033[0;36m"
@@ -98,7 +97,9 @@ def bash(cmd: str, quit=False):
 
 
 def ask_user_yn(msg: str, f, *args):
-    sys.stdout.write(CYAN + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
+    sys.stdout.write(
+        CYAN + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: "
+    )
     sys.stdout.flush()
     while True:
         ch = getch()
@@ -204,9 +205,9 @@ class System(object):
             System.mkdir(f"/.cache/go-build")
             run("chown", ["-R", "nobody:nobody", "/.cache"])
 
-            # bash(
-                # f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm"
-            # )
+            bash(
+                f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm"
+            )
             bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
 
             System.rm_sudo_nopasswd("nobody")
