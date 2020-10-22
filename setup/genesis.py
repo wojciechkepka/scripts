@@ -70,7 +70,6 @@ def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=
                 sys.stdout.write(c.decode("utf-8"))
             except:
                 pass
-        sys.stdout.write(NC)
         sys.stderr.write(RED)
         for c in iter(lambda: p.stderr.read(1), b""):
             try:
@@ -210,6 +209,7 @@ class System(object):
             )
             bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
 
+            os.remove("/.cache")
             System.rm_sudo_nopasswd("nobody")
 
     @staticmethod
