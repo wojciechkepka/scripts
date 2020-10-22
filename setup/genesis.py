@@ -275,7 +275,9 @@ class System(object):
 
     @staticmethod
     def rm_sudo_nopasswd(user: str):
-        os.remove(f"/etc/sudoers.d/01{user}")
+        p = f"/etc/sudoers.d/01{user}"
+        if Path(p).exists():
+            os.remove(p)
 
 
 class Init(object):
