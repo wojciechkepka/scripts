@@ -206,9 +206,9 @@ class System(object):
         run("/usr/bin/pacman", ["--sync", "--noconfirm"] + pkgs)
 
     @staticmethod
-    def install_pkg_if_bin_not_exists(pkg):
-        if not System.bins_exist([pkg]):
-            System.install_pkgs([pkg])
+    def install_pkg_if_bin_not_exists(binary: str, pkg=""):
+        if not System.bins_exist([binary]):
+            System.install_pkgs([pkg if pkg else binary])
 
     @staticmethod
     def install_sudo():
