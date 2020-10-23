@@ -15,6 +15,16 @@ from pathlib import Path
 
 ################################################################################
 
+BLUE = "\033[0;34m"
+CYAN = "\033[0;36m"
+GREEN = "\033[0;32m"
+YELLOW = "\033[0;33m"
+RED = "\033[0;31m"
+BWHITE = "\033[1;37m"
+NC = "\033[0m"
+
+################################################################################
+
 
 FILENAME = Path(__file__)
 FULLPATH = FILENAME.absolute()
@@ -25,7 +35,17 @@ YAY_REPO = f"{ARCH_URL}/yay.git"
 REPO_BASE = "https://github.com/wojciechkepka"
 GIT_CONF_REPO = f"{REPO_BASE}/configs"
 PKG_URL = "https://wkepka.dev/static/pkgs"
-PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
+
+try:
+    PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
+except Exception as e:
+    sys.stderr.write(f"{BWHITE}Failed to get pkgs data from{NC} `{CYAN}{PKG_URL}{NC}` - {RED}{e}{NC}\n")
+    PGKS = {
+        "base": [],
+        "community": [],
+        "aur": [],
+        "coc": [],
+    }
 
 LOCALES = ["en_US.UTF-8", "en_GB.UTF-8", "pl_PL.UTF-8"]
 LANG = "en_US.UTF-8"
@@ -35,14 +55,6 @@ CITY = "Warsaw"
 
 
 ################################################################################
-
-BLUE = "\033[0;34m"
-CYAN = "\033[0;36m"
-GREEN = "\033[0;32m"
-YELLOW = "\033[0;33m"
-RED = "\033[0;31m"
-BWHITE = "\033[1;37m"
-NC = "\033[0m"
 
 
 def eprint(msg: str):
@@ -64,38 +76,42 @@ def inp_or_default(msg: str, default):
 
 
 def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=True):
-    print(f"Running `{cmd} {' '.join(args)}`")
-    p = (
-        subprocess.Popen([cmd] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if not redirect
-        else subprocess.Popen([cmd] + args, stdout=sys.stdout, stderr=sys.stderr)
-    )
-    if follow:
-        sys.stdout.write(GREEN)
-        for c in iter(lambda: p.stdout.read(1), b""):
-            try:
-                sys.stdout.write(c.decode("utf-8"))
-            except:
-                pass
-        sys.stderr.write(RED)
-        for c in iter(lambda: p.stderr.read(1), b""):
-            try:
-                sys.stdout.write(c.decode("utf-8"))
-            except:
-                pass
-        sys.stdout.write(NC)
-    else:
-        (stdout, stderr) = p.communicate()
-        if p.returncode != 0:
-            if display and stderr:
-                eprint("ERROR: " + stderr.decode("utf-8"))
-            if quit:
-                sys.exit(1)
+    s = f"{CYAN}{cmd} {' '.join(args)}{NC}"
+    print(f"{BWHITE}Running{NC} `{s}`")
+    try:
+        p = (
+            subprocess.Popen([cmd] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if not redirect
+            else subprocess.Popen([cmd] + args, stdout=sys.stdout, stderr=sys.stderr)
+        )
+        if follow:
+            sys.stdout.write(GREEN)
+            for c in iter(lambda: p.stdout.read(1), b""):
+                try:
+                    sys.stdout.write(c.decode("utf-8"))
+                except:
+                    pass
+            sys.stderr.write(RED)
+            for c in iter(lambda: p.stderr.read(1), b""):
+                try:
+                    sys.stdout.write(c.decode("utf-8"))
+                except:
+                    pass
+            sys.stdout.write(NC)
         else:
-            if display and stdout:
-                sys.stdout.write(GREEN)
-                print(stdout.decode("utf-8"))
-                sys.stdout.write(NC)
+            (stdout, stderr) = p.communicate()
+            if p.returncode != 0:
+                if display and stderr:
+                    eprint("ERROR: " + stderr.decode("utf-8"))
+                if quit:
+                    sys.exit(1)
+            else:
+                if display and stdout:
+                    sys.stdout.write(GREEN)
+                    print(stdout.decode("utf-8"))
+                    sys.stdout.write(NC)
+    except Exception as e:
+        sys.stderr.write(f"{BWHITE}Failed running command{NC} `{s}` - {RED}{e}{NC}")
 
 
 def bash(cmd: str, quit=False):
@@ -103,19 +119,19 @@ def bash(cmd: str, quit=False):
 
 
 def ask_user_yn(msg: str, f, *args):
-    sys.stdout.write(CYAN + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
+    sys.stdout.write(BWHITE + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
     sys.stdout.flush()
     while True:
         ch = getch()
         if ch == "y":
-            sys.stdout.write(BWHITE + ch + "\n" + NC)
+            sys.stdout.write(CYAN + ch + "\n" + NC)
             f(*args)
             break
         elif ch == "n":
-            sys.stdout.write(BWHITE + ch + "\n" + NC)
+            sys.stdout.write(CYAN + ch + "\n" + NC)
             break
         elif ch == "q":
-            sys.stdout.write(BWHITE + ch + "\n" + NC)
+            sys.stdout.write(CYAN + ch + "\n" + NC)
             raise KeyboardInterrupt
 
 
@@ -547,5 +563,5 @@ if __name__ == "__main__":
         print("Exiting...")
         sys.exit(0)
     except Exception as e:
-        eprint(f"Unhandled exception - {e}")
+        eprint(f"{BWHITE}Unhandled exception{NC} - {RED}{e}{NC}")
         sys.exit(1)
