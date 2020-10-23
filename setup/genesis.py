@@ -103,9 +103,7 @@ def bash(cmd: str, quit=False):
 
 
 def ask_user_yn(msg: str, f, *args):
-    sys.stdout.write(
-        CYAN + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: "
-    )
+    sys.stdout.write(CYAN + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
     sys.stdout.flush()
     while True:
         ch = getch()
@@ -242,9 +240,7 @@ class System(object):
             System.mkdir(f"/.cache/go-build")
             run("chown", ["-R", "nobody:nobody", "/.cache"])
 
-            bash(
-                f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm"
-            )
+            bash(f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm")
             bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
 
             os.remove("/.cache")
@@ -388,15 +384,9 @@ class Setup(object):
 
         os.makedirs(self.theme_dir())
 
-        System.extar(
-            self.git_conf_dir() + "/themes/Sweet-Dark.tar.xz", self.theme_dir()
-        )
-        System.extar(
-            self.git_conf_dir() + "/themes/Sweet-Purple.tar.xz", self.theme_dir()
-        )
-        System.extar(
-            self.git_conf_dir() + "/themes/Sweet-Teal.tar.xz", self.theme_dir()
-        )
+        System.extar(self.git_conf_dir() + "/themes/Sweet-Dark.tar.xz", self.theme_dir())
+        System.extar(self.git_conf_dir() + "/themes/Sweet-Purple.tar.xz", self.theme_dir())
+        System.extar(self.git_conf_dir() + "/themes/Sweet-Teal.tar.xz", self.theme_dir())
         run(
             "unzip",
             [
@@ -518,9 +508,7 @@ class Setup(object):
 
     def setup(self):
         ask_user_yn("Create user?", self.create_user)
-        ask_user_yn(
-            "Initialize localization/time/hostname?", self.datetime_location_setup
-        )
+        ask_user_yn("Initialize localization/time/hostname?", self.datetime_location_setup)
         ask_user_yn("Install community packages?", self.install_pkgs, PKGS["community"])
         ask_user_yn("Install AUR packages?", self.install_pkgs, PKGS["aur"])
         ask_user_yn("Install configs?", self.install_configs)
