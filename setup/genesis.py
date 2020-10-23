@@ -16,7 +16,7 @@ from pathlib import Path
 
 ################################################################################
 
-BLUE = "\033[0;34m"
+LBLUE = "\033[1;94m"
 CYAN = "\033[0;36m"
 GREEN = "\033[0;32m"
 YELLOW = "\033[0;33m"
@@ -40,7 +40,7 @@ PKG_URL = "https://wkepka.dev/static/pkgs"
 try:
     PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
 except Exception as e:
-    sys.stderr.write(f"{BWHITE}Failed to get pkgs data from{NC} `{CYAN}{PKG_URL}{NC}` - {RED}{e}{NC}\n")
+    sys.stderr.write(f"{BWHITE}Failed to get pkgs data from{NC} `{LBLUE}{PKG_URL}{NC}` - {RED}{e}{NC}\n")
     PGKS = {
         "base": [],
         "community": [],
@@ -65,7 +65,7 @@ def eprint(msg: str):
 
 
 def inp(msg: str) -> str:
-    sys.stdout.write(CYAN + msg + BWHITE)
+    sys.stdout.write(BWHITE + msg + CYAN)
     inp = input()
     sys.stdout.write(NC)
     return inp
@@ -77,7 +77,7 @@ def inp_or_default(msg: str, default: Any) -> str:
 
 
 def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=True):
-    s = f"{CYAN}{cmd} {' '.join(args)}{NC}"
+    s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
     print(f"{BWHITE}Running{NC} `{s}`")
     try:
         p = (
@@ -561,7 +561,7 @@ if __name__ == "__main__":
         elif cmd == "setup":
             Setup()
     except KeyboardInterrupt:
-        print("Exiting...")
+        print(f"\n{BWHITE}Exiting...{NC}")
         sys.exit(0)
     except Exception as e:
         eprint(f"{BWHITE}Unhandled exception{NC} - {RED}{e}{NC}")
