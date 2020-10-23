@@ -11,7 +11,6 @@ import tty
 import termios
 import json
 import urllib.request
-from typing import Any
 from pathlib import Path
 
 ################################################################################
@@ -71,7 +70,7 @@ def inp(msg: str) -> str:
     return inp
 
 
-def inp_or_default(msg: str, default: Any) -> str:
+def inp_or_default(msg: str, default) -> str:
     x = inp(msg + f"(default - '{default}'): ")
     return x if x else default
 
@@ -157,7 +156,7 @@ class System(object):
 
     @staticmethod
     def chown(p: str, user: str, group: str, recursive=True):
-        run("chown", ["-R", f"{user}:{group}", p] if recursive else [f"{user}:{group}".p])
+        run("chown", ["-R", f"{user}:{group}", p] if recursive else [f"{user}:{group}", p])
 
     @staticmethod
     def cp(f1: str, f2: str):
