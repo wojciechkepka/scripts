@@ -156,6 +156,10 @@ class System(object):
         run("chmod", [flags, "--verbose", f])
 
     @staticmethod
+    def chown(p: str, user: str, group: str, recursive=True):
+        run("chown", ["-R", f"{user}:{group}", p] if recursive else [f"{user}:{group}".p])
+
+    @staticmethod
     def cp(f1: str, f2: str):
         run("cp", ["--verbose", f1, f2])
 
@@ -250,12 +254,12 @@ class System(object):
         with tempfile.TemporaryDirectory() as tmpdir:
             System.gitclone(PACKAGE_QUERY_REPO, f"{tmpdir}/package-query")
             System.gitclone(YAY_REPO, f"{tmpdir}/yay")
-            run("chown", ["-R", "nobody:nobody", tmpdir])
+            System.chown(tmpdir, "nobody", "nobody")
 
             System.sudo_nopasswd("nobody")
             System.mkdir(f"/.cache")
             System.mkdir(f"/.cache/go-build")
-            run("chown", ["-R", "nobody:nobody", "/.cache"])
+            System.chown("/.cache", "nobody", "nobody")
 
             bash(f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm")
             bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
