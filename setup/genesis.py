@@ -11,6 +11,7 @@ import tty
 import termios
 import json
 import urllib.request
+from typing import Any
 from pathlib import Path
 
 ################################################################################
@@ -70,7 +71,7 @@ def inp(msg: str) -> str:
     return inp
 
 
-def inp_or_default(msg: str, default):
+def inp_or_default(msg: str, default: Any) -> str:
     x = inp(msg + f"(default - '{default}'): ")
     return x if x else default
 
@@ -218,7 +219,7 @@ class System(object):
         return True
 
     @staticmethod
-    def install_pkgs(pkgs):
+    def install_pkgs(pkgs: [str]):
         run("/usr/bin/pacman", ["--sync", "--noconfirm"] + pkgs)
 
     @staticmethod
