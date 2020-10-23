@@ -175,7 +175,7 @@ class System(object):
 
     @staticmethod
     def nvim(cmd: str):
-        run("nvim", ["-c", f'"{cmd}"'])
+        run("nvim", ["--headless", "-c", f'"{cmd}"'])
 
     @staticmethod
     def extar(f: str, to: str):
@@ -540,7 +540,7 @@ class Setup(object):
 
     def install_coc_extensions(self):
         for ext in PKGS["coc"]:
-            System.nvim(f"CocInstall -sync {ext}|q")
+            System.nvim(f"CocInstall -sync {ext}|q|q")
 
     def setup(self):
         ask_user_yn("Create user?", self.create_user)
