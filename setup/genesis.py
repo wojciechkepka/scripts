@@ -502,6 +502,11 @@ class Setup(object):
         else:
             eprint(f"Missing nvim config file at {p}")
 
+        System.install_pkg_if_bin_not_exists("pip2", "python2-pip")
+        System.install_pkg_if_bin_not_exists("pip", "python-pip")
+        run("pip", ["install", "neovim"])
+        run("pip2", ["install", "neovim"])
+
     def install_coc_extensions(self):
         for ext in PKGS["coc"]:
             System.nvim(f"CocInstall -sync {ext}|q")
