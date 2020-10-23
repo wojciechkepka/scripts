@@ -491,6 +491,8 @@ class Setup(object):
         with open("/etc/profile", "a") as f:
             f.write("export XDG_CONFIG_DIR=$HOME/.config")
 
+        System.chown(self.userhome, self.username, self.username)
+
     def set_lang(self):
         lang = inp_or_default("Enter system language", LANG)
         System.set_lang(lang)
