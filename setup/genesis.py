@@ -71,7 +71,7 @@ def inp(msg: str) -> str:
 
 
 def inp_or_default(msg: str, default) -> str:
-    x = inp(msg + f"(default - '{default}'): ")
+    x = inp(msg + f"(default - '{YELLOW}{default}{NC}'): ")
     return x if x else default
 
 
@@ -117,7 +117,6 @@ def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=
 def bash(cmd: str, quit=False):
     run("/bin/bash", ["-c", cmd], quit=quit)
 
-
 def ask_user_yn(msg: str, f, *args):
     sys.stdout.write(BWHITE + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
     sys.stdout.flush()
@@ -133,6 +132,13 @@ def ask_user_yn(msg: str, f, *args):
         elif ch == "q":
             sys.stdout.write(CYAN + ch + "\n" + NC)
             raise KeyboardInterrupt
+
+def steps(s):
+    for step in s:
+        if len(step) > 2:
+            ask_user_yn(step[0], step[1], *step[2:])
+        else:
+            ask_user_yn(step[0], step[1])
 
 
 def getch():
@@ -222,8 +228,8 @@ class System(object):
         return True
 
     @staticmethod
-    def install_pkgs(pkgs: [str]):
-        run("/usr/bin/pacman", ["--sync", "--noconfirm"] + pkgs)
+    def install_pkgs(pkgs: [str], pkgmngr="/usr/bin/pacman", user="root"):
+        run("sudo", ["-u", user, pkgmngr, "--sync", "--noconfirm"] + pkgs)
 
     @staticmethod
     def install_pkg_if_bin_not_exists(binary: str, pkg=""):
@@ -256,14 +262,14 @@ class System(object):
             System.chown(tmpdir, "nobody", "nobody")
 
             System.sudo_nopasswd("nobody")
-            System.mkdir(f"/.cache")
-            System.mkdir(f"/.cache/go-build")
+            System.mkdir("/.cache")
+            System.mkdir("/.cache/go-build")
             System.chown("/.cache", "nobody", "nobody")
 
             bash(f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm")
             bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
 
-            os.remove("/.cache")
+            shutil.rmtree("/.cache")
             System.rm_sudo_nopasswd("nobody")
 
     @staticmethod
@@ -330,7 +336,7 @@ class Init(object):
             quit=True,
         )
 
-    def install_pkgs(self, pkgs: [str]):
+    def pacstrap(self, pkgs: [str]):
         run("/usr/bin/pacstrap", [self.location] + pkgs, quit=True)
 
     def arch_chroot(self, cmd: str):
@@ -389,14 +395,13 @@ class Setup(object):
             System.mkdir(d)
 
     def install_pkgs(self, pkgs: [str]):
-        ask_user_yn("Run Reflector?", System.install_and_run_reflector)
         if shutil.which("yay") is None:
             System.build_yay()
 
         if not self.username:
             self.username = inp("Enter username: ")
 
-        run("sudo", ["-u", self.username, "yay", "-S", "--noconfirm"] + pkgs)
+        System.install_pkgs(pkgs, pkgmngr="yay", user=self.username)
 
     def install_themes(self):
         if Path(self.theme_dir()).exists():
@@ -542,14 +547,17 @@ class Setup(object):
             System.nvim(f"CocInstall -sync {ext}|q|q")
 
     def setup(self):
-        ask_user_yn("Create user?", self.create_user)
-        ask_user_yn("Initialize localization/time/hostname?", self.datetime_location_setup)
-        ask_user_yn("Install community packages?", self.install_pkgs, PKGS["community"])
-        ask_user_yn("Install AUR packages?", self.install_pkgs, PKGS["aur"])
-        ask_user_yn("Install configs?", self.install_configs)
-        ask_user_yn("Install themes?", self.install_themes)
-        ask_user_yn("Install nvim plugins?", self.install_nvim_plugins)
-        ask_user_yn("Install coc extensions?", self.install_coc_extensions)
+        steps([
+            ("Create user?", self.create_user),
+            ("Initialize localization/time/hostname?", self.datetime_location_setup),
+            ("Run Reflector?", System.install_and_run_reflector),
+            ("Install community packages?", self.install_pkgs, PKGS["community"]),
+            ("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
+            ("Install configs?", self.install_configs),
+            ("Install themes?", self.install_themes),
+            ("Install nvim plugins?", self.install_nvim_plugins),
+            ("Install coc extensions?", self.install_coc_extensions),
+        ])
 
 
 ################################################################################
@@ -568,9 +576,11 @@ if __name__ == "__main__":
         if cmd == "init":
             location = inp("Enter new installation location: ")
             init = Init(location)
-            ask_user_yn("Generate fstab?", init.gen_fstab)
-            ask_user_yn("Install base packages?", init.install_pkgs, PKGS["base"])
-            ask_user_yn("Run setup?", init.init_setup)
+            steps([
+                ("Install base packages?", init.pacstrap, PKGS["base"]),
+                ("Generate fstab?", init.gen_fstab),
+                ("Run setup?", init.init_setup),
+            ])
         elif cmd == "setup":
             Setup()
     except KeyboardInterrupt:
