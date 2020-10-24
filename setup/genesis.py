@@ -60,7 +60,7 @@ CITY = "Warsaw"
 def eprint(msg: str):
     sys.stderr.write(RED)
     sys.stderr.write(msg)
-    sys.stdout.write(NC)
+    sys.stderr.write(NC)
 
 
 def inp(msg: str) -> str:
@@ -94,21 +94,22 @@ def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=
             sys.stderr.write(RED)
             for c in iter(lambda: p.stderr.read(1), b""):
                 try:
-                    sys.stdout.write(c.decode("utf-8"))
+                    sys.stderr.write(c.decode("utf-8"))
                 except:
                     pass
             sys.stdout.write(NC)
+            sys.stderr.write(NC)
         else:
             (stdout, stderr) = p.communicate()
             if p.returncode != 0:
                 if display and stderr:
                     eprint("ERROR: " + stderr.decode("utf-8"))
                 if quit:
-                    sys.exit(1)
+                    sys.exit(p.returncode)
             else:
                 if display and stdout:
                     sys.stdout.write(GREEN)
-                    print(stdout.decode("utf-8"))
+                    sys.stdout.write(stdout.decode("utf-8"))
                     sys.stdout.write(NC)
     except Exception as e:
         sys.stderr.write(f"{BWHITE}Failed running command{NC} `{s}` - {RED}{e}{NC}")
@@ -155,7 +156,7 @@ def getch():
 ################################################################################
 
 
-class System(object):
+class System:
     @staticmethod
     def chmod(flags: str, f: str):
         run("chmod", [flags, "--verbose", f])
