@@ -118,6 +118,7 @@ def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=
 def bash(cmd: str, quit=False):
     run("/bin/bash", ["-c", cmd], quit=quit)
 
+
 def ask_user_yn(msg: str, f, *args):
     sys.stdout.write(BWHITE + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
     sys.stdout.flush()
@@ -133,6 +134,7 @@ def ask_user_yn(msg: str, f, *args):
         elif ch == "q":
             sys.stdout.write(CYAN + ch + "\n" + NC)
             raise KeyboardInterrupt
+
 
 def steps(s):
     for step in s:
@@ -548,17 +550,19 @@ class Setup(object):
             System.nvim(f"CocInstall -sync {ext}|q|q")
 
     def setup(self):
-        steps([
-            ("Create user?", self.create_user),
-            ("Initialize localization/time/hostname?", self.datetime_location_setup),
-            ("Run Reflector?", System.install_and_run_reflector),
-            ("Install community packages?", self.install_pkgs, PKGS["community"]),
-            ("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
-            ("Install configs?", self.install_configs),
-            ("Install themes?", self.install_themes),
-            ("Install nvim plugins?", self.install_nvim_plugins),
-            ("Install coc extensions?", self.install_coc_extensions),
-        ])
+        steps(
+            [
+                ("Create user?", self.create_user),
+                ("Initialize localization/time/hostname?", self.datetime_location_setup),
+                ("Run Reflector?", System.install_and_run_reflector),
+                ("Install community packages?", self.install_pkgs, PKGS["community"]),
+                ("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
+                ("Install configs?", self.install_configs),
+                ("Install themes?", self.install_themes),
+                ("Install nvim plugins?", self.install_nvim_plugins),
+                ("Install coc extensions?", self.install_coc_extensions),
+            ]
+        )
 
 
 ################################################################################
@@ -577,11 +581,13 @@ if __name__ == "__main__":
         if cmd == "init":
             location = inp("Enter new installation location: ")
             init = Init(location)
-            steps([
-                ("Install base packages?", init.pacstrap, PKGS["base"]),
-                ("Generate fstab?", init.gen_fstab),
-                ("Run setup?", init.init_setup),
-            ])
+            steps(
+                [
+                    ("Install base packages?", init.pacstrap, PKGS["base"]),
+                    ("Generate fstab?", init.gen_fstab),
+                    ("Run setup?", init.init_setup),
+                ]
+            )
         elif cmd == "setup":
             Setup()
     except KeyboardInterrupt:
