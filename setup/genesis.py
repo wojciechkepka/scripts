@@ -358,12 +358,20 @@ class Init(object):
         self.copy_self()
         self.arch_chroot(f"/usr/bin/python {FILENAME} setup")
 
+    def init(self):
+        steps(
+            [
+                ("Install base packages?", self.pacstrap, PKGS["base"]),
+                ("Generate fstab?", self.gen_fstab),
+                ("Run setup?", self.init_setup),
+            ]
+        )
+
 
 class Setup(object):
     def __init__(self):
         self.username = ""
         self.userhome = ""
-        self.setup()
 
     def git_conf_dir(self) -> str:
         return f"{self.userhome}/dev/configs"
@@ -580,16 +588,9 @@ if __name__ == "__main__":
     try:
         if cmd == "init":
             location = inp("Enter new installation location: ")
-            init = Init(location)
-            steps(
-                [
-                    ("Install base packages?", init.pacstrap, PKGS["base"]),
-                    ("Generate fstab?", init.gen_fstab),
-                    ("Run setup?", init.init_setup),
-                ]
-            )
+            Init(location).init()
         elif cmd == "setup":
-            Setup()
+            Setup().setup()
     except KeyboardInterrupt:
         print(f"\n{BWHITE}Exiting...{NC}")
         sys.exit(0)
