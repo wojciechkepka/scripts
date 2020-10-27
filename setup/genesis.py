@@ -165,7 +165,10 @@ class System:
 
     @staticmethod
     def chown(p: str, user: str, group: str, recursive=True):
-        run("chown", ["-R", f"{user}:{group}", p] if recursive else [f"{user}:{group}", p])
+        run(
+            "chown",
+            ["-R", f"{user}:{group}", p] if recursive else [f"{user}:{group}", p],
+        )
 
     @staticmethod
     def cp(f1: str, f2: str):
@@ -444,6 +447,8 @@ class Setup(object):
             self.git_conf_dir(),
             self.xdg_conf_dir(),
             "/etc/lightdm",
+            "/usr/share/vim/vimfiles/ftdetect",
+            "/usr/share/vim/vimfiles/syntax",
             f"{self.xdg_conf_dir()}/alacritty",
             f"{self.xdg_conf_dir()}/bspwm",
             f"{self.xdg_conf_dir()}/nvim",
@@ -492,13 +497,15 @@ class Setup(object):
         for f in conf_files:
             System.link(self.git_conf_dir(), f, self.userhome)
 
-        etc_files = [
+        global_files = [
             "/etc/lightdm/lightdm.conf",
             "/etc/lightdm/lightdm-webkit2-greeter.conf",
             "/etc/mkinitcpio.conf",
+            "/usr/share/vim/vimfiles/syntax/notes.vim",
+            "/usr/share/vim/vimfiles/ftdetect/notes.vim",
         ]
 
-        for f in etc_files:
+        for f in global_files:
             System.link(self.git_conf_dir(), f, "/")
 
         System.chmod("+x", f"{self.git_conf_dir()}/.config/bspwm/bspwmrc")
@@ -561,7 +568,10 @@ class Setup(object):
         steps(
             [
                 ("Create user?", self.create_user),
-                ("Initialize localization/time/hostname?", self.datetime_location_setup),
+                (
+                    "Initialize localization/time/hostname?",
+                    self.datetime_location_setup,
+                ),
                 ("Run Reflector?", System.install_and_run_reflector),
                 ("Install community packages?", self.install_pkgs, PKGS["community"]),
                 ("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
