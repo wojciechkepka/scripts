@@ -503,6 +503,7 @@ class Setup(object):
             "/etc/mkinitcpio.conf",
             "/usr/share/vim/vimfiles/syntax/notes.vim",
             "/usr/share/vim/vimfiles/ftdetect/notes.vim",
+            "/etc/pacman.conf",
         ]
 
         for f in global_files:
