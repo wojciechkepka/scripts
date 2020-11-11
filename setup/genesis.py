@@ -14,6 +14,7 @@ import traceback
 import json
 import urllib.request
 from pathlib import Path
+from typing import List, Dict
 
 ################################################################################
 
@@ -43,7 +44,7 @@ try:
     PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
 except Exception as e:
     sys.stderr.write(f"{BWHITE}Failed to get pkgs data from{NC} `{LBLUE}{PKG_URL}{NC}` - {RED}{e}{NC}\n")
-    PGKS = {
+    PGKS: Dict[str, List[str]] = {
         "base": [],
         "community": [],
         "aur": [],
@@ -78,7 +79,7 @@ def inp_or_default(msg: str, default) -> str:
     return x if x else default
 
 
-def run(cmd: str, args: [str], display=True, quit=False, redirect=False, follow=True):
+def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, follow=True):
     s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
     print(f"{BWHITE}Running{NC} `{s}`")
     try:
@@ -233,14 +234,14 @@ class System:
         run("passwd", [user], redirect=True, follow=False)
 
     @staticmethod
-    def bins_exist(bins: [str]):
+    def bins_exist(bins: List[str]):
         for b in bins:
             if shutil.which(b) is None:
                 return False
         return True
 
     @staticmethod
-    def install_pkgs(pkgs: [str], pkgmngr="/usr/bin/pacman", user="root"):
+    def install_pkgs(pkgs: List[str], pkgmngr="/usr/bin/pacman", user="root"):
         run("sudo", ["-u", user, pkgmngr, "--sync", "--noconfirm"] + pkgs)
 
     @staticmethod
@@ -285,7 +286,7 @@ class System:
             System.rm_sudo_nopasswd("nobody")
 
     @staticmethod
-    def gen_locale(locales: [str]):
+    def gen_locale(locales: List[str]):
         with open("/etc/locale.gen", "a+") as f:
             for line in f.readlines():
                 for locale in locales:
@@ -348,7 +349,7 @@ class Init(object):
             quit=True,
         )
 
-    def pacstrap(self, pkgs: [str]):
+    def pacstrap(self, pkgs: List[str]):
         run("/usr/bin/pacstrap", [self.location] + pkgs, quit=True)
 
     def arch_chroot(self, cmd: str):
@@ -414,7 +415,7 @@ class Setup(object):
         for d in dirs:
             System.mkdir(d)
 
-    def install_pkgs(self, pkgs: [str]):
+    def install_pkgs(self, pkgs: List[str]):
         if shutil.which("yay") is None:
             System.build_yay()
 
