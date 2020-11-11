@@ -611,16 +611,16 @@ class Setup(object):
         s.create_hosts()
 
     def install_vim_plug(self):
-        f = f"{self.xdg_conf_dir()}/nvim/autoload/plug.vim"
+        f = self.xdg_conf_dir().joinpath("nvim/autoload/plug.vim")
         url = "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-        if not Path(f).exists():
+        if not f.exists():
             bash(f"curl -fLo {f} --create-dirs {url}")
             System.chown(self.xdg_conf_dir(), self.username, self.username)
 
     def install_nvim_plugins(self):
         System.install_pkg_if_bin_not_exists("nvim", pkg="neovim")
         self.install_vim_plug()
-        p = self.xdg_conf_dir() + "/nvim/init.vim"
+        p = self.xdg_conf_dir().joinpath("/nvim/init.vim")
         if Path(p).exists():
             System.nvim("PlugInstall|q|q")
         else:
