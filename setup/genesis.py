@@ -35,6 +35,7 @@ PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
 YAY_REPO = f"{ARCH_URL}/yay.git"
 REPO_BASE = "https://github.com/wojciechkepka"
 GIT_CONF_REPO = f"{REPO_BASE}/configs"
+GIT_SCRIPTS_REPO = f"{REPO_BASE}/scripts"
 PKG_URL = "https://wkepka.dev/static/pkgs"
 
 try:
@@ -521,6 +522,9 @@ class Setup(object):
 
         System.chown(self.git_conf_dir(), self.username, self.username)
         System.chown(self.userhome, self.username, self.username)
+
+        home = Path(self.userhome)
+        System._link(Path(self.git_conf_dir()), home.joinpath("conf"))
 
     def set_lang(self):
         lang = inp_or_default("Enter system language", LANG)
