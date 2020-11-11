@@ -123,29 +123,33 @@ def bash(cmd: str, quit=False):
     run("/bin/bash", ["-c", cmd], quit=quit)
 
 
-def ask_user_yn(msg: str, f, *args):
+def ask_user_yn(msg: str, f, *args, ask=True):
     sys.stdout.write(BWHITE + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
     sys.stdout.flush()
-    while True:
-        ch = getch()
-        if ch == "y":
-            sys.stdout.write(CYAN + ch + "\n" + NC)
-            f(*args)
-            break
-        elif ch == "n":
-            sys.stdout.write(CYAN + ch + "\n" + NC)
-            break
-        elif ch == "q":
-            sys.stdout.write(CYAN + ch + "\n" + NC)
-            raise KeyboardInterrupt
+    if ask:
+        while True:
+            ch = getch()
+            if ch == "y":
+                sys.stdout.write(CYAN + ch + "\n" + NC)
+                f(*args)
+                break
+            elif ch == "n":
+                sys.stdout.write(CYAN + ch + "\n" + NC)
+                break
+            elif ch == "q":
+                sys.stdout.write(CYAN + ch + "\n" + NC)
+                raise KeyboardInterrupt
+    else:
+        sys.stdout.write(CYAN + "y\n" + NC)
+        f(*args)
 
 
-def steps(s):
+def steps(s, ask=True):
     for step in s:
         if len(step) > 2:
-            ask_user_yn(step[0], step[1], *step[2:])
+            ask_user_yn(step[0], step[1], *step[2:], ask=ask)
         else:
-            ask_user_yn(step[0], step[1])
+            ask_user_yn(step[0], step[1], ask=ask)
 
 
 def getch():
@@ -166,6 +170,30 @@ def fwrite(p: Path, s: str):
 
 
 ################################################################################
+
+
+class SetupConfig(object):
+    def __init__(self, location="", user="", password="", hostname="", auto=False):
+        self.location = location
+        self.user = user
+        self.password = password
+        self.hostname = hostname
+        self.auto = auto
+
+    def as_args(self, location=True, user=True, password=True, hostname=True, auto=True) -> str:
+        s = " "
+        if location:
+            s += f"--location {self.location} "
+        if user:
+            s += f"--user {self.user} "
+        if password:
+            s += f"--password {self.password} "
+        if hostname:
+            s += f"--hostname {self.hostname} "
+        if auto:
+            s += "--auto "
+
+        return s
 
 
 class System:
@@ -218,20 +246,26 @@ class System:
         System._link(base.joinpath(f), out.joinpath(f))
 
     @staticmethod
-    def create_user(user: str):
+    def create_user(user: str, password=""):
+        args = [
+            "--groups",
+            "wheel",
+            "--create-home",
+            "--shell",
+            "/bin/bash",
+        ]
+
+        if password:
+            args += ["--password", password]
+
         run(
             "useradd",
-            [
-                "--groups",
-                "wheel",
-                "--create-home",
-                "--shell",
-                "/bin/bash",
-                user,
-            ],
+            args + [user],
             quit=True,
         )
-        run("passwd", [user], redirect=True, follow=False)
+
+        if not password:
+            run("passwd", [user], redirect=True, follow=False)
 
     @staticmethod
     def bins_exist(bins: List[str]):
@@ -338,8 +372,9 @@ class System:
 
 
 class Init(object):
-    def __init__(self, location: str):
-        self.location = location
+    def __init__(self, cfg: SetupConfig):
+        self.location = cfg.location
+        self.cfg = cfg
 
     def gen_fstab(self):
         bash(
@@ -364,7 +399,11 @@ class Init(object):
 
     def init_setup(self):
         self.copy_self()
-        self.arch_chroot(f"/usr/bin/python {FILENAME} setup")
+        cmd = f"/usr/bin/python {FILENAME} setup"
+        if self.cfg.auto:
+            cmd += self.cfg.as_args(location=False)
+
+        self.arch_chroot(cmd)
 
     def init(self):
         steps(
@@ -372,14 +411,18 @@ class Init(object):
                 ("Install base packages?", self.pacstrap, PKGS["base"]),
                 ("Generate fstab?", self.gen_fstab),
                 ("Run setup?", self.init_setup),
-            ]
+            ],
+            ask=not self.cfg.auto,
         )
 
 
 class Setup(object):
-    def __init__(self, user=""):
-        self.username = user if user else ""
-        self.userhome = Path(f"/home/{user}") if user else Path("")
+    def __init__(self, cfg: SetupConfig):
+        self.username = cfg.user if cfg.user else ""
+        self.userhome = Path(f"/home/{self.username}") if self.username else Path("")
+        self.password = cfg.password
+        self.hostname = cfg.hostname
+        self.ask = not cfg.auto
 
     def git_conf_dir(self) -> Path:
         return Path("/etc/configs")
@@ -394,10 +437,11 @@ class Setup(object):
         return self.userhome / ".icons"
 
     def create_user(self):
-        self.username = inp("Enter username: ")
-        self.userhome = Path(f"/home/{self.username}")
+        if not self.username:
+            self.username = inp("Enter username: ")
+            self.userhome = Path(f"/home/{self.username}")
 
-        System.create_user(self.username)
+        System.create_user(self.username, password=self.password)
         System.sudo_nopasswd(self.username)
 
     def create_home_dirs(self):
@@ -534,17 +578,17 @@ class Setup(object):
             fwrite(p, f"export PATH=$PATH:{str(scripts_dir)}")
 
     def set_lang(self):
-        lang = inp_or_default("Enter system language", LANG)
+        lang = inp_or_default("Enter system language", LANG) if self.ask else LANG
         System.set_lang(lang)
 
     def set_keymap(self):
-        keymap = inp_or_default("Enter keymap", KEYMAP)
+        keymap = inp_or_default("Enter keymap", KEYMAP) if self.ask else KEYMAP
         System.set_keymap(keymap)
         System.setxkbmap(keymap)
 
     def set_timezone(self):
-        region = inp_or_default("Enter region", REGION)
-        city = inp_or_default("Enter city", CITY)
+        region = inp_or_default("Enter region", REGION) if self.ask else REGION
+        city = inp_or_default("Enter city", CITY) if self.ask else CITY
         System.set_timezone(region, city)
 
     def datetime_location_setup(self):
@@ -553,8 +597,9 @@ class Setup(object):
         self.set_lang()
         self.set_keymap()
         self.set_timezone()
-        hostname = inp("Enter hostname: ")
-        s.set_hostname(hostname)
+        if not self.hostname and self.ask:
+            self.hostname = inp("Enter hostname: ")
+        s.set_hostname(self.hostname)
         s.create_hosts()
 
     def install_vim_plug(self):
@@ -598,7 +643,8 @@ class Setup(object):
                 ("Install themes?", self.install_themes),
                 ("Install nvim plugins?", self.install_nvim_plugins),
                 ("Install coc extensions?", self.install_coc_extensions),
-            ]
+            ],
+            ask=self.ask,
         )
 
 
@@ -613,15 +659,36 @@ if __name__ == "__main__":
         "setup", help="Post setup including user creation, localization, packages, configs..."
     )
     setup_parser.add_argument("-u", "--user", dest="user", default="", help="Specify a user for setup")
+    setup_parser.add_argument("-p", "--password", dest="password", default="", help="Users password")
+    setup_parser.add_argument("--hostname", dest="hostname", default="")
+    setup_parser.add_argument("-a", "--auto", dest="auto", action="store_true")
+
+    auto_parser = subparsers.add_parser(
+        "auto", help="Automated install where all parameters are specified upfront. All answers will be yes."
+    )
+    auto_parser.add_argument("-l", "--location", dest="location", help="Setup location", required=True)
+    auto_parser.add_argument("-u", "--user", dest="user", help="Specify a user for setup", required=True)
+    auto_parser.add_argument("-p", "--password", dest="password", help="Password for user", required=True)
+    auto_parser.add_argument("--hostname", dest="hostname", help="Hostname of this system", required=True)
 
     args = parser.parse_args()
 
     try:
         if args.command == "init":
             location = inp("Enter new installation location: ")
-            Init(location).init()
+            Init(SetupConfig(location)).init()
         elif args.command == "setup":
-            Setup(user=args.user).setup()
+            Setup(SetupConfig(user=args.user, password=args.password, hostname=args.hostname, auto=args.auto)).setup()
+        elif args.command == "auto":
+            Init(
+                SetupConfig(
+                    location=args.location,
+                    user=args.user,
+                    password=args.password,
+                    hostname=args.hostname,
+                    auto=True,
+                )
+            ).init()
     except KeyboardInterrupt:
         print(f"\n{BWHITE}Exiting...{NC}")
         sys.exit(0)
