@@ -164,42 +164,38 @@ def getch():
 
 class System:
     @staticmethod
-    def chmod(flags: str, f: str):
-        run("chmod", [flags, "--verbose", f])
+    def chmod(flags: str, f: Path):
+        run("chmod", [flags, "--verbose", str(f)])
 
     @staticmethod
-    def chown(p: str, user: str, group: str, recursive=True):
+    def chown(p: Path, user: str, group: str, recursive=True):
         run(
             "chown",
-            ["-R", f"{user}:{group}", p] if recursive else [f"{user}:{group}", p],
+            ["-R", f"{user}:{group}", str(p)] if recursive else [f"{user}:{group}", str(p)],
         )
 
     @staticmethod
-    def cp(f1: str, f2: str):
-        run("cp", ["--verbose", f1, f2])
+    def cp(f1: Path, f2: Path):
+        run("cp", ["--verbose", str(f1), str(f2)])
 
     @staticmethod
-    def mkdir(d: str):
-        if not Path(d).exists():
-            os.makedirs(d)
-
-    @staticmethod
-    def gitclone(repo: str, where=""):
+    def gitclone(repo: str, where=Path("")):
+        p = str(where)
         System.install_pkg_if_bin_not_exists("git")
-        run("git", ["clone", repo, where] if where else ["clone", repo])
+        run("git", ["clone", repo, p] if p else ["clone", repo])
 
     @staticmethod
     def nvim(cmd: str):
         run("nvim", ["--headless", "-c", f'"{cmd}"'])
 
     @staticmethod
-    def extar(f: str, to: str):
+    def extar(f: Path, to: Path):
         run(
             "tar",
             [
                 "--extract",
-                f"--file={f}",
-                f"--directory={to}",
+                f"--file={str(f)}",
+                f"--directory={str(to)}",
             ],
         )
 
@@ -211,11 +207,9 @@ class System:
         )
 
     @staticmethod
-    def link(base: str, f: str, out: str):
-        b = Path(base)
-        o = Path(out)
+    def link(base: Path, f: str, out: Path):
         f = f[1:] if f.startswith("/") else f
-        System._link(b.joinpath(f), o.joinpath(f))
+        System._link(base.joinpath(f), out.joinpath(f))
 
     @staticmethod
     def create_user(user: str):
@@ -270,13 +264,12 @@ class System:
             System.install_pkgs(bld_pkgs)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            System.gitclone(PACKAGE_QUERY_REPO, f"{tmpdir}/package-query")
-            System.gitclone(YAY_REPO, f"{tmpdir}/yay")
+            System.gitclone(PACKAGE_QUERY_REPO, Path(f"{tmpdir}/package-query"))
+            System.gitclone(YAY_REPO, Path(f"{tmpdir}/yay"))
             System.chown(tmpdir, "nobody", "nobody")
 
             System.sudo_nopasswd("nobody")
-            System.mkdir("/.cache")
-            System.mkdir("/.cache/go-build")
+            Path("/.cache/go-build").mkdir(parents=True)
             System.chown("/.cache", "nobody", "nobody")
 
             bash(f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm")
@@ -313,7 +306,7 @@ class System:
     @staticmethod
     def set_timezone(region: str, city: str):
         if region and city:
-            System._link(f"/usr/share/zoneinfo/{region}/{city}", "/etc/localtime")
+            System._link(Path("/usr/share/zoneinfo/{region}/{city}"), Path("/etc/localtime"))
 
     @staticmethod
     def set_hostname(hostname: str):
@@ -381,39 +374,39 @@ class Init(object):
 class Setup(object):
     def __init__(self, user=""):
         self.username = user if user else ""
-        self.userhome = f"/home/{user}" if user else ""
+        self.userhome = Path(f"/home/{user}") if user else Path("")
 
-    def git_conf_dir(self) -> str:
-        return f"/etc/configs"
+    def git_conf_dir(self) -> Path:
+        return Path("/etc/configs")
 
-    def xdg_conf_dir(self) -> str:
-        return f"{self.userhome}/.config"
+    def xdg_conf_dir(self) -> Path:
+        return self.userhome / ".config"
 
-    def theme_dir(self) -> str:
-        return f"{self.userhome}/.themes"
+    def theme_dir(self) -> Path:
+        return self.userhome / ".themes"
 
-    def icons_dir(self) -> str:
-        return f"{self.userhome}/.icons"
+    def icons_dir(self) -> Path:
+        return self.userhome / ".icons"
 
     def create_user(self):
         self.username = inp("Enter username: ")
-        self.userhome = f"/home/{self.username}"
+        self.userhome = Path("/home/{self.username}")
 
         System.create_user(self.username)
         System.sudo_nopasswd(self.username)
 
     def create_home_dirs(self):
         dirs = [
-            f"{self.userhome}/screenshots",
-            f"{self.userhome}/wallpapers",
-            f"{self.userhome}/Downloads",
-            f"{self.userhome}/Documents",
+            self.userhome / "screenshots",
+            self.userhome / "wallpapers",
+            self.userhome / "Downloads",
+            self.userhome / "Documents",
             self.theme_dir(),
             self.icons_dir(),
         ]
 
         for d in dirs:
-            System.mkdir(d)
+            d.mkdir(parents=True, exist_ok=True)
 
     def install_pkgs(self, pkgs: List[str]):
         if shutil.which("yay") is None:
@@ -430,51 +423,51 @@ class Setup(object):
 
         os.makedirs(self.theme_dir())
 
-        System.extar(self.git_conf_dir() + "/themes/Sweet-Dark.tar.xz", self.theme_dir())
-        System.extar(self.git_conf_dir() + "/themes/Sweet-Purple.tar.xz", self.theme_dir())
-        System.extar(self.git_conf_dir() + "/themes/Sweet-Teal.tar.xz", self.theme_dir())
+        git_theme_dir = self.git_conf_dir() / "themes"
+        System.extar(git_theme_dir / "Sweet-Dark.tar.xz", self.theme_dir())
+        System.extar(git_theme_dir / "Sweet-Purple.tar.xz", self.theme_dir())
+        System.extar(git_theme_dir / "Sweet-Teal.tar.xz", self.theme_dir())
+
         run(
             "unzip",
             [
-                f"{self.git_conf_dir()}/themes/Solarized-Dark-Orange_2.0.1.zip",
+                str(git_theme_dir / "Solarized-Dark-Orange_2.0.1.zip"),
                 "-d",
-                self.theme_dir(),
+                str(self.theme_dir()),
             ],
         )
-        System.gitclone(
-            f"{REPO_BASE}/gruvbox-gtk",
-            f"{self.theme_dir()}/gruvbox-gtk",
-        )
-        System.gitclone(f"{REPO_BASE}/Aritim-Dark", f"{self.theme_dir()}/aritim")
-        run("mv", [f"{self.theme_dir()}/aritim/GTK", f"{self.theme_dir()}/Aritim-Dark"])
-        shutil.rmtree(f"{self.theme_dir()}/aritim")
+        System.gitclone(f"{REPO_BASE}/gruvbox-gtk", self.theme_dir() / "gruvbox-gtk")
+        System.gitclone(f"{REPO_BASE}/Aritim-Dark", self.theme_dir() / "aritim")
+        run("mv", [str(self.theme_dir() / "aritim/GTK"), str(self.theme_dir() / "Aritim-Dark")])
+        shutil.rmtree(str(self.theme_dir() / "aritim"))
 
     def install_configs(self):
         conf_dirs = [
             self.git_conf_dir(),
             self.xdg_conf_dir(),
-            "/etc/lightdm",
-            "/usr/share/backgrounds",
-            "/usr/share/vim/vimfiles/ftdetect",
-            "/usr/share/vim/vimfiles/syntax",
-            f"{self.xdg_conf_dir()}/alacritty",
-            f"{self.xdg_conf_dir()}/bspwm",
-            f"{self.xdg_conf_dir()}/nvim",
-            f"{self.xdg_conf_dir()}/polybar",
-            f"{self.xdg_conf_dir()}/sxhkd",
-            f"{self.xdg_conf_dir()}/termite",
-            f"{self.xdg_conf_dir()}/gtk-3.0",
-            f"{self.xdg_conf_dir()}/dunst",
-            f"{self.xdg_conf_dir()}/rofi",
-            f"{self.xdg_conf_dir()}/picom",
-            f"{self.xdg_conf_dir()}/zathura",
-            f"{self.userhome}/.newsboat",
+            Path("/etc/lightdm"),
+            Path("/usr/share/backgrounds"),
+            Path("/usr/share/vim/vimfiles/ftdetect"),
+            Path("/usr/share/vim/vimfiles/syntax"),
+            self.xdg_conf_dir() / "alacritty",
+            self.xdg_conf_dir() / "bspwm",
+            self.xdg_conf_dir() / "nvim",
+            self.xdg_conf_dir() / "polybar",
+            self.xdg_conf_dir() / "sxhkd",
+            self.xdg_conf_dir() / "termite",
+            self.xdg_conf_dir() / "gtk-3.0",
+            self.xdg_conf_dir() / "dunst",
+            self.xdg_conf_dir() / "rofi",
+            self.xdg_conf_dir() / "picom",
+            self.xdg_conf_dir() / "zathura",
+            self.userhome / "newsboat",
         ]
 
         for d in conf_dirs:
-            System.mkdir(d)
+            d.mkdir(parents=True, exist_ok=True)
 
         System.gitclone(GIT_CONF_REPO, self.git_conf_dir())
+        System._link(self.git_conf_dir(), self.userhome / "conf")
 
         conf_files = [
             ".bashrc",
@@ -515,18 +508,15 @@ class Setup(object):
         ]
 
         for f in global_files:
-            System.link(self.git_conf_dir(), f, "/")
+            System.link(self.git_conf_dir(), f, Path("/"))
 
-        System.chmod("+x", f"{self.git_conf_dir()}/.config/bspwm/bspwmrc")
+        System.chmod("+x", self.git_conf_dir() / ".config/bspwm/bspwmrc")
 
         with open("/etc/profile", "a") as f:
             f.write("export XDG_CONFIG_DIR=$HOME/.config")
 
         System.chown(self.git_conf_dir(), self.username, self.username)
         System.chown(self.userhome, self.username, self.username)
-
-        home = Path(self.userhome)
-        System._link(Path(self.git_conf_dir()), home.joinpath("conf"))
 
     def set_lang(self):
         lang = inp_or_default("Enter system language", LANG)
