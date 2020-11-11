@@ -692,6 +692,6 @@ if __name__ == "__main__":
         print(f"\n{BWHITE}Exiting...{NC}")
         sys.exit(0)
     except Exception as e:
-        eprint(f"{BWHITE}Unhandled exception{NC} - {RED}{e}{NC}\n")
-        eprint(f"{BWHITE}Traceback:\n{RED}{traceback.format_exc()}{NC}")
+        eprint(f"{BWHITE}Unhandled exception{NC}\n")
+        eprint(f"{RED}{traceback.format_exc()}{NC}")
         sys.exit(1)
