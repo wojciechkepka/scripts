@@ -605,20 +605,22 @@ class Setup(object):
 ################################################################################
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    subparsers = parser.add_subparsers(dest="cmd")
+    parser = argparse.ArgumentParser(prog="genesis", description="Arch linux setup")
+    subparsers = parser.add_subparsers(title="command", dest="command", required=True)
 
-    init_parser = subparsers.add_parser("init")
-    setup_parser = subparsers.add_parser("setup")
+    init_parser = subparsers.add_parser("init", help="Initial setup like bootstraping packages and generating fstab")
+    setup_parser = subparsers.add_parser(
+        "setup", help="Post setup including user creation, localization, packages, configs..."
+    )
     setup_parser.add_argument("-u", "--user", dest="user", default="", help="Specify a user for setup")
 
     args = parser.parse_args()
 
     try:
-        if args.cmd == "init":
+        if args.command == "init":
             location = inp("Enter new installation location: ")
             Init(location).init()
-        elif args.cmd == "setup":
+        elif args.command == "setup":
             Setup(user=args.user).setup()
     except KeyboardInterrupt:
         print(f"\n{BWHITE}Exiting...{NC}")
