@@ -377,7 +377,7 @@ class Setup(object):
         self.userhome = ""
 
     def git_conf_dir(self) -> str:
-        return f"{self.userhome}/dev/configs"
+        return f"/etc/configs"
 
     def xdg_conf_dir(self) -> str:
         return f"{self.userhome}/.config"
@@ -514,6 +514,7 @@ class Setup(object):
         with open("/etc/profile", "a") as f:
             f.write("export XDG_CONFIG_DIR=$HOME/.config")
 
+        System.chown(self.git_conf_dir(), self.username, self.username)
         System.chown(self.userhome, self.username, self.username)
 
     def set_lang(self):
