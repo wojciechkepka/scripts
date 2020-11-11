@@ -519,6 +519,17 @@ class Setup(object):
         System.chown(self.git_conf_dir(), self.username, self.username)
         System.chown(self.userhome, self.username, self.username)
 
+    def install_scripts(self):
+        scripts_dir = Path("/usr/local/scripts")
+        System.gitclone(GIT_SCRIPTS_REPO, scripts_dir)
+        System.chown(scripts_dir, self.username, self.username)
+        System._link(scripts_dir, self.userhome / "dev" / "scripts")
+
+        p = Path("/etc/profile.d/scripts_path.sh")
+        if not p.exists():
+            with p.open("w") as f:
+                f.write(f"export PATH=$PATH:{str(scripts_dir)}")
+
     def set_lang(self):
         lang = inp_or_default("Enter system language", LANG)
         System.set_lang(lang)
@@ -580,6 +591,7 @@ class Setup(object):
                 ("Install community packages?", self.install_pkgs, PKGS["community"]),
                 ("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
                 ("Install configs?", self.install_configs),
+                ("Install scripts?", self.install_scripts),
                 ("Install themes?", self.install_themes),
                 ("Install nvim plugins?", self.install_nvim_plugins),
                 ("Install coc extensions?", self.install_coc_extensions),
