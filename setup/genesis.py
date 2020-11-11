@@ -172,30 +172,6 @@ def fwrite(p: Path, s: str):
 ################################################################################
 
 
-class SetupConfig(object):
-    def __init__(self, location="", user="", password="", hostname="", auto=False):
-        self.location = location
-        self.user = user
-        self.password = password
-        self.hostname = hostname
-        self.auto = auto
-
-    def as_args(self, location=True, user=True, password=True, hostname=True, auto=True) -> str:
-        s = " "
-        if location:
-            s += f"--location {self.location} "
-        if user:
-            s += f"--user {self.user} "
-        if password:
-            s += f"--password {self.password} "
-        if hostname:
-            s += f"--hostname {self.hostname} "
-        if auto:
-            s += "--auto "
-
-        return s
-
-
 class System:
     @staticmethod
     def chmod(flags: str, f: Path):
@@ -353,12 +329,7 @@ class System:
 
     @staticmethod
     def create_hosts():
-        fwrite(
-            Path("/etc/hosts"),
-            """
-127.0.0.1     localhost
-::1           localhost""",
-        )
+        fwrite(Path("/etc/hosts"), "127.0.0.1     localhost\n::1           localhost\n")
 
     @staticmethod
     def sudo_nopasswd(user: str):
@@ -369,6 +340,43 @@ class System:
         p = f"/etc/sudoers.d/01{user}"
         if Path(p).exists():
             os.remove(p)
+
+
+class SetupConfig(object):
+    def __init__(self, location="", user="", password="", hostname="", auto=False):
+        self.location = location
+        self.user = user
+        self.password = password
+        self.hostname = hostname
+        self.auto = auto
+
+    @staticmethod
+    def from_args(args: argparse.Namespace):
+        if args.command == "init":
+            return SetupConfig(location=args.location)
+        elif args.command == "setup":
+            return SetupConfig(user=args.user, password=args.password, hostname=args.hostname, auto=args.auto)
+        elif args.command == "auto":
+            return SetupConfig(
+                location=args.location, user=args.user, password=args.password, hostname=args.hostname, auto=args.auto
+            )
+        else:
+            return SetupConfig()
+
+    def as_args_str(self, location=True, user=True, password=True, hostname=True, auto=True) -> str:
+        s = " "
+        if location:
+            s += f"--location {self.location} "
+        if user:
+            s += f"--user {self.user} "
+        if password:
+            s += f"--password {self.password} "
+        if hostname:
+            s += f"--hostname {self.hostname} "
+        if auto:
+            s += "--auto "
+
+        return s
 
 
 class Init(object):
@@ -401,7 +409,7 @@ class Init(object):
         self.copy_self()
         cmd = f"/usr/bin/python {FILENAME} setup"
         if self.cfg.auto:
-            cmd += self.cfg.as_args(location=False)
+            cmd += self.cfg.as_args_str(location=False)
 
         self.arch_chroot(cmd)
 
@@ -655,6 +663,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(title="command", dest="command", required=True)
 
     init_parser = subparsers.add_parser("init", help="Initial setup like bootstraping packages and generating fstab")
+    init_parser.add_argument("-l", "--location", dest="location", help="Setup location", required=True)
     setup_parser = subparsers.add_parser(
         "setup", help="Post setup including user creation, localization, packages, configs..."
     )
@@ -672,23 +681,13 @@ if __name__ == "__main__":
     auto_parser.add_argument("--hostname", dest="hostname", help="Hostname of this system", required=True)
 
     args = parser.parse_args()
+    cfg = SetupConfig.from_args(args)
 
     try:
-        if args.command == "init":
-            location = inp("Enter new installation location: ")
-            Init(SetupConfig(location)).init()
+        if args.command == "init" or args.command == "auto":
+            Init(cfg).init()
         elif args.command == "setup":
-            Setup(SetupConfig(user=args.user, password=args.password, hostname=args.hostname, auto=args.auto)).setup()
-        elif args.command == "auto":
-            Init(
-                SetupConfig(
-                    location=args.location,
-                    user=args.user,
-                    password=args.password,
-                    hostname=args.hostname,
-                    auto=True,
-                )
-            ).init()
+            Setup(cfg).setup()
     except KeyboardInterrupt:
         print(f"\n{BWHITE}Exiting...{NC}")
         sys.exit(0)
