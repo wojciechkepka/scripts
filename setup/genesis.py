@@ -306,7 +306,7 @@ class System:
     @staticmethod
     def set_timezone(region: str, city: str):
         if region and city:
-            System._link(Path("/usr/share/zoneinfo/{region}/{city}"), Path("/etc/localtime"))
+            System._link(Path(f"/usr/share/zoneinfo/{region}/{city}"), Path("/etc/localtime"))
 
     @staticmethod
     def set_hostname(hostname: str):
