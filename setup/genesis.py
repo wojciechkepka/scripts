@@ -447,6 +447,7 @@ class Setup(object):
             self.git_conf_dir(),
             self.xdg_conf_dir(),
             "/etc/lightdm",
+            "/usr/share/backgrounds",
             "/usr/share/vim/vimfiles/ftdetect",
             "/usr/share/vim/vimfiles/syntax",
             f"{self.xdg_conf_dir()}/alacritty",
