@@ -500,7 +500,7 @@ class Setup(object):
 
         global_files = [
             "/etc/lightdm/lightdm.conf",
-            "/etc/lightdm/lightdm-webkit2-greeter.conf",
+            "/etc/lightdm/lightdm-gtk-greeter.conf",
             "/etc/mkinitcpio.conf",
             "/usr/share/vim/vimfiles/syntax/notes.vim",
             "/usr/share/vim/vimfiles/ftdetect/notes.vim",
