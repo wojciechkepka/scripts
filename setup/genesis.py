@@ -656,42 +656,55 @@ class Setup(object):
         )
 
 
+class Genesis(object):
+    def __init__(self):
+        args = Genesis.parser().parse_args()
+        self.cmd = args.command
+        self.cfg = SetupConfig.from_args(args)
+
+    @staticmethod
+    def parser() -> argparse.ArgumentParser:
+        parser = argparse.ArgumentParser(prog="genesis", description="Arch linux setup")
+        subparsers = parser.add_subparsers(title="command", dest="command", required=True)
+
+        init_parser = subparsers.add_parser(
+            "init", help="Initial setup like bootstraping packages and generating fstab"
+        )
+        init_parser.add_argument("-l", "--location", dest="location", help="Setup location", required=True)
+        setup_parser = subparsers.add_parser(
+            "setup", help="Post setup including user creation, localization, packages, configs..."
+        )
+        setup_parser.add_argument("-u", "--user", dest="user", default="", help="Specify a user for setup")
+        setup_parser.add_argument("-p", "--password", dest="password", default="", help="Users password")
+        setup_parser.add_argument("--hostname", dest="hostname", default="")
+        setup_parser.add_argument("-a", "--auto", dest="auto", action="store_true")
+
+        auto_parser = subparsers.add_parser(
+            "auto", help="Automated install where all parameters are specified upfront. All answers will be yes."
+        )
+        auto_parser.add_argument("-l", "--location", dest="location", help="Setup location", required=True)
+        auto_parser.add_argument("-u", "--user", dest="user", help="Specify a user for setup", required=True)
+        auto_parser.add_argument("-p", "--password", dest="password", help="Password for user", required=True)
+        auto_parser.add_argument("--hostname", dest="hostname", help="Hostname of this system", required=True)
+
+        return parser
+
+    def main(self):
+        try:
+            if self.cmd == "init" or self.cmd == "auto":
+                Init(self.cfg).init()
+            elif self.cmd == "setup":
+                Setup(self.cfg).setup()
+        except KeyboardInterrupt:
+            print(f"\n{BWHITE}Exiting...{NC}")
+            sys.exit(0)
+        except Exception:
+            eprint(f"{BWHITE}Unhandled exception{NC}\n")
+            eprint(f"{RED}{traceback.format_exc()}{NC}")
+            sys.exit(1)
+
+
 ################################################################################
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="genesis", description="Arch linux setup")
-    subparsers = parser.add_subparsers(title="command", dest="command", required=True)
-
-    init_parser = subparsers.add_parser("init", help="Initial setup like bootstraping packages and generating fstab")
-    init_parser.add_argument("-l", "--location", dest="location", help="Setup location", required=True)
-    setup_parser = subparsers.add_parser(
-        "setup", help="Post setup including user creation, localization, packages, configs..."
-    )
-    setup_parser.add_argument("-u", "--user", dest="user", default="", help="Specify a user for setup")
-    setup_parser.add_argument("-p", "--password", dest="password", default="", help="Users password")
-    setup_parser.add_argument("--hostname", dest="hostname", default="")
-    setup_parser.add_argument("-a", "--auto", dest="auto", action="store_true")
-
-    auto_parser = subparsers.add_parser(
-        "auto", help="Automated install where all parameters are specified upfront. All answers will be yes."
-    )
-    auto_parser.add_argument("-l", "--location", dest="location", help="Setup location", required=True)
-    auto_parser.add_argument("-u", "--user", dest="user", help="Specify a user for setup", required=True)
-    auto_parser.add_argument("-p", "--password", dest="password", help="Password for user", required=True)
-    auto_parser.add_argument("--hostname", dest="hostname", help="Hostname of this system", required=True)
-
-    args = parser.parse_args()
-    cfg = SetupConfig.from_args(args)
-
-    try:
-        if args.command == "init" or args.command == "auto":
-            Init(cfg).init()
-        elif args.command == "setup":
-            Setup(cfg).setup()
-    except KeyboardInterrupt:
-        print(f"\n{BWHITE}Exiting...{NC}")
-        sys.exit(0)
-    except Exception as e:
-        eprint(f"{BWHITE}Unhandled exception{NC}\n")
-        eprint(f"{RED}{traceback.format_exc()}{NC}")
-        sys.exit(1)
+    Genesis().main()
