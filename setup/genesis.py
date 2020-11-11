@@ -201,15 +201,18 @@ class System:
         )
 
     @staticmethod
-    def _link(f: str, to: str):
+    def _link(f: Path, to: Path):
         run(
             "ln",
-            ["--symbolic", "--force", "--verbose", f, to],
+            ["--symbolic", "--force", "--verbose", str(f), str(to)],
         )
 
     @staticmethod
     def link(base: str, f: str, out: str):
-        System._link(f"{base}/{f}", f"{out}/{f}")
+        b = Path(base)
+        o = Path(out)
+        f = f[1:] if f.startswith("/") else f
+        System._link(b.joinpath(f), o.joinpath(f))
 
     @staticmethod
     def create_user(user: str):
