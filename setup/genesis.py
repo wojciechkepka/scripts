@@ -401,6 +401,7 @@ class Setup(object):
             self.userhome / "wallpapers",
             self.userhome / "Downloads",
             self.userhome / "Documents",
+            self.userhome / "dev",
             self.theme_dir(),
             self.icons_dir(),
         ]
@@ -467,7 +468,7 @@ class Setup(object):
             d.mkdir(parents=True, exist_ok=True)
 
         System.gitclone(GIT_CONF_REPO, self.git_conf_dir())
-        System._link(self.git_conf_dir(), self.userhome / "conf")
+        System._link(self.git_conf_dir(), self.userhome / "dev" / "conf")
 
         conf_files = [
             ".bashrc",
