@@ -1,5 +1,11 @@
 #!/bin/env python
+"""
+Genesis
 
+automated arch linux installation customized to my needs.
+"""
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ imports ~~~~~~~~~~~~|
 ################################################################################
 
 import argparse
@@ -17,6 +23,26 @@ from pathlib import Path
 from typing import List, Dict
 
 ################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~~|
+################################################################################
+
+ARCH_URL = "https://aur.archlinux.org"
+PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
+YAY_REPO = f"{ARCH_URL}/yay.git"
+REPO_BASE = "https://github.com/wojciechkepka"
+GIT_CONF_REPO = f"{REPO_BASE}/configs"
+GIT_SCRIPTS_REPO = f"{REPO_BASE}/scripts"
+PKG_URL = "https://wkepka.dev/static/pkgs"
+
+LOCALES = ["en_US.UTF-8", "en_GB.UTF-8", "pl_PL.UTF-8"]
+LANG = "en_US.UTF-8"
+KEYMAP = "pl"
+REGION = "Europe"
+CITY = "Warsaw"
+
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~~|
+################################################################################
 
 LBLUE = "\033[1;94m"
 CYAN = "\033[0;36m"
@@ -26,19 +52,12 @@ RED = "\033[0;31m"
 BWHITE = "\033[1;37m"
 NC = "\033[0m"
 
-################################################################################
-
-
 FILENAME = Path(__file__)
 FULLPATH = FILENAME.absolute()
 
-ARCH_URL = "https://aur.archlinux.org"
-PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
-YAY_REPO = f"{ARCH_URL}/yay.git"
-REPO_BASE = "https://github.com/wojciechkepka"
-GIT_CONF_REPO = f"{REPO_BASE}/configs"
-GIT_SCRIPTS_REPO = f"{REPO_BASE}/scripts"
-PKG_URL = "https://wkepka.dev/static/pkgs"
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ packages ~~~~~~~~~~~|
+################################################################################
 
 try:
     PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
@@ -51,13 +70,8 @@ except Exception as e:
         "coc": [],
     }
 
-LOCALES = ["en_US.UTF-8", "en_GB.UTF-8", "pl_PL.UTF-8"]
-LANG = "en_US.UTF-8"
-KEYMAP = "pl"
-REGION = "Europe"
-CITY = "Warsaw"
-
-
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ util ~~~~~~~~~~~~~~~|
 ################################################################################
 
 
@@ -167,9 +181,6 @@ def fwrite(p: Path, s: str):
     with open(p, "w") as f:
         print(f"{BWHITE}Writing{NC} `{s}` to {LBLUE}`{str(p)}`{NC}")
         f.write(s)
-
-
-################################################################################
 
 
 class System:
@@ -340,6 +351,11 @@ class System:
         p = f"/etc/sudoers.d/01{user}"
         if Path(p).exists():
             os.remove(p)
+
+
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ setup~~~~~~~~~~~~~~|
+################################################################################
 
 
 class SetupConfig(object):
