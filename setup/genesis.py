@@ -390,7 +390,7 @@ class Setup(object):
 
     def create_user(self):
         self.username = inp("Enter username: ")
-        self.userhome = Path("/home/{self.username}")
+        self.userhome = Path(f"/home/{self.username}")
 
         System.create_user(self.username)
         System.sudo_nopasswd(self.username)
