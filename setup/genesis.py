@@ -159,6 +159,12 @@ def getch():
     return ch
 
 
+def fwrite(p: Path, s: str):
+    with open(p, "w") as f:
+        print(f"{BWHITE}Writing{NC} `{s}` to {LBLUE}`{str(p)}`{NC}")
+        f.write(s)
+
+
 ################################################################################
 
 
@@ -290,13 +296,11 @@ class System:
 
     @staticmethod
     def set_lang(lang: str):
-        with open("/etc/locale.conf", "w+") as f:
-            f.write("LANG=" + lang)
+        fwrite(Path("/etc/locale.conf"), "LANG=" + lang)
 
     @staticmethod
     def set_keymap(keymap: str):
-        with open("/etc/vconsole.conf", "w+") as f:
-            f.write("KEYMAP=" + keymap)
+        fwrite(Path("/etc/vconsole.conf"), "KEYMAP=" + keymap)
 
     @staticmethod
     def setxkbmap(keymap: str):
@@ -311,19 +315,20 @@ class System:
     @staticmethod
     def set_hostname(hostname: str):
         if hostname:
-            with open("/etc/hostname", "w+") as f:
-                f.write(hostname)
+            fwrite(Path("/etc/hostname"), hostname)
 
     @staticmethod
     def create_hosts():
-        with open("/etc/hosts", "w+") as f:
-            f.write("127.0.0.1      localhost")
-            f.write("::1            localhost")
+        fwrite(
+            Path("/etc/hosts"),
+            """
+127.0.0.1     localhost
+::1           localhost""",
+        )
 
     @staticmethod
     def sudo_nopasswd(user: str):
-        with open(f"/etc/sudoers.d/01{user}", "w+") as f:
-            f.write(f"{user} ALL=(ALL) NOPASSWD: ALL\n")
+        fwrite(Path(f"/etc/sudoers.d/01{user}"), f"{user} ALL=(ALL) NOPASSWD: ALL\n")
 
     @staticmethod
     def rm_sudo_nopasswd(user: str):
@@ -513,8 +518,7 @@ class Setup(object):
 
         System.chmod("+x", self.git_conf_dir() / ".config/bspwm/bspwmrc")
 
-        with open("/etc/profile", "a") as f:
-            f.write("export XDG_CONFIG_DIR=$HOME/.config")
+        fwrite(Path("/etc/profile"), "export XDG_CONFIG_DIR=$HOME/.config")
 
         System.chown(self.git_conf_dir(), self.username, self.username)
         System.chown(self.userhome, self.username, self.username)
@@ -527,8 +531,7 @@ class Setup(object):
 
         p = Path("/etc/profile.d/scripts_path.sh")
         if not p.exists():
-            with p.open("w") as f:
-                f.write(f"export PATH=$PATH:{str(scripts_dir)}")
+            fwrite(p, f"export PATH=$PATH:{str(scripts_dir)}")
 
     def set_lang(self):
         lang = inp_or_default("Enter system language", LANG)
