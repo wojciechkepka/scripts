@@ -2,6 +2,7 @@
 
 ################################################################################
 
+import argparse
 import os
 import subprocess
 import sys
@@ -372,9 +373,9 @@ class Init(object):
 
 
 class Setup(object):
-    def __init__(self):
-        self.username = ""
-        self.userhome = ""
+    def __init__(self, user=""):
+        self.username = user if user else ""
+        self.userhome = f"/home/{user}" if user else ""
 
     def git_conf_dir(self) -> str:
         return f"/etc/configs"
@@ -589,21 +590,21 @@ class Setup(object):
 ################################################################################
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(
-            f"USAGE: \
-        {FILENAME} <init | setup>"
-        )
-        sys.exit(1)
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="cmd")
 
-    cmd = sys.argv[1]
+    init_parser = subparsers.add_parser("init")
+    setup_parser = subparsers.add_parser("setup")
+    setup_parser.add_argument("-u", "--user", dest="user", default="", help="Specify a user for setup")
+
+    args = parser.parse_args()
 
     try:
-        if cmd == "init":
+        if args.cmd == "init":
             location = inp("Enter new installation location: ")
             Init(location).init()
-        elif cmd == "setup":
-            Setup().setup()
+        elif args.cmd == "setup":
+            Setup(user=args.user).setup()
     except KeyboardInterrupt:
         print(f"\n{BWHITE}Exiting...{NC}")
         sys.exit(0)
