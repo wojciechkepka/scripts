@@ -324,11 +324,6 @@ class System:
         fwrite(Path("/etc/vconsole.conf"), "KEYMAP=" + keymap)
 
     @staticmethod
-    def setxkbmap(keymap: str):
-        if shutil.which("setxkbmap") is not None:
-            run("setxkbmap", [keymap])
-
-    @staticmethod
     def set_timezone(region: str, city: str):
         if region and city:
             System._link(Path(f"/usr/share/zoneinfo/{region}/{city}"), Path("/etc/localtime"))
@@ -608,7 +603,6 @@ class Setup(object):
     def set_keymap(self):
         keymap = inp_or_default("Enter keymap", KEYMAP) if self.ask else KEYMAP
         System.set_keymap(keymap)
-        System.setxkbmap(keymap)
 
     def set_timezone(self):
         region = inp_or_default("Enter region", REGION) if self.ask else REGION
