@@ -50,7 +50,7 @@ def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, fol
             if not redirect
             else subprocess.Popen([cmd] + args, stdout=sys.stdout, stderr=sys.stderr)
         )
-        if follow:
+        if follow and display:
             sys.stdout.write(GREEN)
             for c in iter(lambda: p.stdout.read(1), b""):
                 try:
@@ -70,13 +70,13 @@ def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, fol
             if p.returncode != 0:
                 if display and stderr:
                     eprint("ERROR: " + stderr.decode("utf-8"))
-                if quit:
-                    sys.exit(p.returncode)
             else:
                 if display and stdout:
-                    sys.stdout.write(GREEN)
-                    sys.stdout.write(stdout.decode("utf-8"))
-                    sys.stdout.write(NC)
+                    sys.stdout.write(GREEN + stdout.decode("utf-8") + NC)
+
+        if p.returncode != 0 and quit:
+            sys.exit(p.returncode)
+
     except Exception as e:
         sys.stderr.write(f"{BWHITE}Failed running command{NC} `{s}` - {RED}{e}{NC}")
 
