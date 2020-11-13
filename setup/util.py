@@ -1,4 +1,12 @@
 #!/bin/env python
+"""
+Util
+
+Utility funcs for creating interactive cli scripts
+"""
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ imports ~~~~~~~~~~~|
+################################################################################
 
 import sys
 import subprocess
@@ -26,10 +34,12 @@ NC = "\033[0m"
 
 
 def eprint(msg: str):
+    """Prints a message to stderr in red color."""
     sys.stderr.write(RED + msg + NC)
 
 
 def inp(msg: str) -> str:
+    """Takes input from user printing msg first."""
     sys.stdout.write(BWHITE + msg + CYAN)
     inp = input()
     sys.stdout.write(NC)
@@ -37,11 +47,17 @@ def inp(msg: str) -> str:
 
 
 def inp_or_default(msg: str, default) -> str:
+    """Asks user for input printing msg first. If users input is empty uses default as return"""
     x = inp(msg + f"(default - '{YELLOW}{default}{NC}'): ")
     return x if x else default
 
 
 def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, follow=True):
+    """Runs specified cmd with args in a subprocess.
+    If redirect is true stdout and stderr will be redirected directly to main processes fd.
+    If follow is true the output of subprocess will be printed as it is filled.
+    If quit is true and returncode was other than 0 main process exits with returncode.
+    If display is false all output will be hidden"""
     s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
     print(f"{BWHITE}Running{NC} `{s}`")
     try:
@@ -82,10 +98,12 @@ def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, fol
 
 
 def bash(cmd: str, quit=False):
+    """Executes a bash script as a subprocess"""
     run("/bin/bash", ["-c", cmd], quit=quit)
 
 
 def ask_user_yn(msg: str, f, *args, ask=True):
+    """Asks user for y/n choice on msg. If the answer is yes calls function f with *args"""
     sys.stdout.write(BWHITE + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
     sys.stdout.flush()
     if ask:
@@ -107,6 +125,7 @@ def ask_user_yn(msg: str, f, *args, ask=True):
 
 
 def steps(s, ask=True):
+    """Executes a list of steps asking the user for choice on each step"""
     for step in s:
         if len(step) > 2:
             ask_user_yn(step[0], step[1], *step[2:], ask=ask)
@@ -115,6 +134,7 @@ def steps(s, ask=True):
 
 
 def getch():
+    """Gets a raw character from terminal"""
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
     try:
@@ -126,6 +146,7 @@ def getch():
 
 
 def fwrite(p: Path, s: str):
+    """Writes s to a file in path p"""
     with open(p, "w") as f:
         print(f"{BWHITE}Writing{NC} `{s}` to {LBLUE}`{str(p)}`{NC}")
         f.write(s)
