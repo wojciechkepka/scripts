@@ -10,25 +10,20 @@ automated arch linux installation customized to my needs.
 
 import argparse
 import os
-import subprocess
 import sys
-import shutil
-import tempfile
-import tty
-import termios
 import traceback
 import json
+import shutil
 import urllib.request
+import system
 from pathlib import Path
 from typing import List, Dict
+from util import *
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~|
 ################################################################################
 
-ARCH_URL = "https://aur.archlinux.org"
-PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
-YAY_REPO = f"{ARCH_URL}/yay.git"
 REPO_BASE = "https://github.com/wojciechkepka"
 GIT_CONF_REPO = f"{REPO_BASE}/configs"
 GIT_SCRIPTS_REPO = f"{REPO_BASE}/scripts"
@@ -43,14 +38,6 @@ CITY = "Warsaw"
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~|
 ################################################################################
-
-LBLUE = "\033[1;94m"
-CYAN = "\033[0;36m"
-GREEN = "\033[0;32m"
-YELLOW = "\033[0;33m"
-RED = "\033[0;31m"
-BWHITE = "\033[1;37m"
-NC = "\033[0m"
 
 FILENAME = Path(__file__)
 FULLPATH = FILENAME.absolute()
@@ -69,283 +56,6 @@ except Exception as e:
         "aur": [],
         "coc": [],
     }
-
-################################################################################
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ util ~~~~~~~~~~~~~~|
-################################################################################
-
-
-def eprint(msg: str):
-    sys.stderr.write(RED)
-    sys.stderr.write(msg)
-    sys.stderr.write(NC)
-
-
-def inp(msg: str) -> str:
-    sys.stdout.write(BWHITE + msg + CYAN)
-    inp = input()
-    sys.stdout.write(NC)
-    return inp
-
-
-def inp_or_default(msg: str, default) -> str:
-    x = inp(msg + f"(default - '{YELLOW}{default}{NC}'): ")
-    return x if x else default
-
-
-def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, follow=True):
-    s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
-    print(f"{BWHITE}Running{NC} `{s}`")
-    try:
-        p = (
-            subprocess.Popen([cmd] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if not redirect
-            else subprocess.Popen([cmd] + args, stdout=sys.stdout, stderr=sys.stderr)
-        )
-        if follow:
-            sys.stdout.write(GREEN)
-            for c in iter(lambda: p.stdout.read(1), b""):
-                try:
-                    sys.stdout.write(c.decode("utf-8"))
-                except:
-                    pass
-            sys.stderr.write(RED)
-            for c in iter(lambda: p.stderr.read(1), b""):
-                try:
-                    sys.stderr.write(c.decode("utf-8"))
-                except:
-                    pass
-            sys.stdout.write(NC)
-            sys.stderr.write(NC)
-        else:
-            (stdout, stderr) = p.communicate()
-            if p.returncode != 0:
-                if display and stderr:
-                    eprint("ERROR: " + stderr.decode("utf-8"))
-                if quit:
-                    sys.exit(p.returncode)
-            else:
-                if display and stdout:
-                    sys.stdout.write(GREEN)
-                    sys.stdout.write(stdout.decode("utf-8"))
-                    sys.stdout.write(NC)
-    except Exception as e:
-        sys.stderr.write(f"{BWHITE}Failed running command{NC} `{s}` - {RED}{e}{NC}")
-
-
-def bash(cmd: str, quit=False):
-    run("/bin/bash", ["-c", cmd], quit=quit)
-
-
-def ask_user_yn(msg: str, f, *args, ask=True):
-    sys.stdout.write(BWHITE + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
-    sys.stdout.flush()
-    if ask:
-        while True:
-            ch = getch()
-            if ch == "y":
-                sys.stdout.write(CYAN + ch + "\n" + NC)
-                f(*args)
-                break
-            elif ch == "n":
-                sys.stdout.write(CYAN + ch + "\n" + NC)
-                break
-            elif ch == "q":
-                sys.stdout.write(CYAN + ch + "\n" + NC)
-                raise KeyboardInterrupt
-    else:
-        sys.stdout.write(CYAN + "y\n" + NC)
-        f(*args)
-
-
-def steps(s, ask=True):
-    for step in s:
-        if len(step) > 2:
-            ask_user_yn(step[0], step[1], *step[2:], ask=ask)
-        else:
-            ask_user_yn(step[0], step[1], ask=ask)
-
-
-def getch():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
-
-
-def fwrite(p: Path, s: str):
-    with open(p, "w") as f:
-        print(f"{BWHITE}Writing{NC} `{s}` to {LBLUE}`{str(p)}`{NC}")
-        f.write(s)
-
-
-class System:
-    @staticmethod
-    def chmod(flags: str, f: Path):
-        run("chmod", [flags, "--verbose", str(f)])
-
-    @staticmethod
-    def chown(p: Path, user: str, group: str, recursive=True):
-        run(
-            "chown",
-            ["-R", f"{user}:{group}", str(p)] if recursive else [f"{user}:{group}", str(p)],
-        )
-
-    @staticmethod
-    def cp(f1: Path, f2: Path):
-        run("cp", ["--verbose", str(f1), str(f2)])
-
-    @staticmethod
-    def gitclone(repo: str, where=Path("")):
-        p = str(where)
-        System.install_pkg_if_bin_not_exists("git")
-        run("git", ["clone", repo, p] if p else ["clone", repo])
-
-    @staticmethod
-    def nvim(cmd: str):
-        run("nvim", ["--headless", "-c", f'"{cmd}"'])
-
-    @staticmethod
-    def extar(f: Path, to: Path):
-        run(
-            "tar",
-            [
-                "--extract",
-                f"--file={str(f)}",
-                f"--directory={str(to)}",
-            ],
-        )
-
-    @staticmethod
-    def _link(f: Path, to: Path):
-        run(
-            "ln",
-            ["--symbolic", "--force", "--verbose", str(f), str(to)],
-        )
-
-    @staticmethod
-    def link(base: Path, f: str, out: Path):
-        f = f[1:] if f.startswith("/") else f
-        System._link(base.joinpath(f), out.joinpath(f))
-
-    @staticmethod
-    def create_user(user: str, password=""):
-        args = [
-            "--groups",
-            "wheel",
-            "--create-home",
-            "--shell",
-            "/bin/bash",
-        ]
-
-        if password:
-            args += ["--password", password]
-
-        run(
-            "useradd",
-            args + [user],
-            quit=True,
-        )
-
-        if not password:
-            run("passwd", [user], redirect=True, follow=False)
-
-    @staticmethod
-    def bins_exist(bins: List[str]):
-        for b in bins:
-            if shutil.which(b) is None:
-                return False
-        return True
-
-    @staticmethod
-    def install_pkgs(pkgs: List[str], pkgmngr="/usr/bin/pacman", user="root"):
-        run("sudo", ["-u", user, pkgmngr, "--sync", "--noconfirm"] + pkgs)
-
-    @staticmethod
-    def install_pkg_if_bin_not_exists(binary: str, pkg=""):
-        if not System.bins_exist([binary]):
-            System.install_pkgs([pkg if pkg else binary])
-
-    @staticmethod
-    def install_sudo():
-        System.install_pkg_if_bin_not_exists("sudo")
-
-    @staticmethod
-    def install_and_run_reflector():
-        System.install_pkg_if_bin_not_exists("reflector")
-        run(
-            "reflector",
-            ["-l", "100", "--sort", "rate", "--save", "/etc/pacman.d/mirrorlist"],
-        )
-
-    @staticmethod
-    def build_yay():
-        System.install_sudo()
-
-        bld_pkgs = ["git", "wget", "go", "fakeroot"]
-        if not System.bins_exist(bld_pkgs):
-            System.install_pkgs(bld_pkgs)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            System.gitclone(PACKAGE_QUERY_REPO, Path(f"{tmpdir}/package-query"))
-            System.gitclone(YAY_REPO, Path(f"{tmpdir}/yay"))
-            System.chown(tmpdir, "nobody", "nobody")
-
-            System.sudo_nopasswd("nobody")
-            Path("/.cache/go-build").mkdir(parents=True)
-            System.chown("/.cache", "nobody", "nobody")
-
-            bash(f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm")
-            bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
-
-            shutil.rmtree("/.cache")
-            System.rm_sudo_nopasswd("nobody")
-
-    @staticmethod
-    def gen_locale(locales: List[str]):
-        with open("/etc/locale.gen", "a+") as f:
-            for line in f.readlines():
-                for locale in locales:
-                    if line.startswith(f"#{locale}"):
-                        line = locale
-
-        run("locale-gen", [])
-
-    @staticmethod
-    def set_lang(lang: str):
-        fwrite(Path("/etc/locale.conf"), "LANG=" + lang)
-
-    @staticmethod
-    def set_keymap(keymap: str):
-        fwrite(Path("/etc/vconsole.conf"), "KEYMAP=" + keymap)
-
-    @staticmethod
-    def set_timezone(region: str, city: str):
-        if region and city:
-            System._link(Path(f"/usr/share/zoneinfo/{region}/{city}"), Path("/etc/localtime"))
-
-    @staticmethod
-    def set_hostname(hostname: str):
-        if hostname:
-            fwrite(Path("/etc/hostname"), hostname)
-
-    @staticmethod
-    def create_hosts():
-        fwrite(Path("/etc/hosts"), "127.0.0.1     localhost\n::1           localhost\n")
-
-    @staticmethod
-    def sudo_nopasswd(user: str):
-        fwrite(Path(f"/etc/sudoers.d/01{user}"), f"{user} ALL=(ALL) NOPASSWD: ALL\n")
-
-    @staticmethod
-    def rm_sudo_nopasswd(user: str):
-        p = f"/etc/sudoers.d/01{user}"
-        if Path(p).exists():
-            os.remove(p)
 
 
 ################################################################################
@@ -414,7 +124,7 @@ class Init(object):
         )
 
     def copy_self(self):
-        System.cp(str(FULLPATH), f"{self.location}/{FILENAME}")
+        system.cp(str(FULLPATH), f"{self.location}/{FILENAME}")
 
     def init_setup(self):
         self.copy_self()
@@ -460,8 +170,8 @@ class Setup(object):
             self.username = inp("Enter username: ")
             self.userhome = Path(f"/home/{self.username}")
 
-        System.create_user(self.username, password=self.password)
-        System.sudo_nopasswd(self.username)
+        system.create_user(self.username, password=self.password)
+        system.sudo_nopasswd(self.username)
 
     def create_home_dirs(self):
         dirs = [
@@ -479,12 +189,12 @@ class Setup(object):
 
     def install_pkgs(self, pkgs: List[str]):
         if shutil.which("yay") is None:
-            System.build_yay()
+            system.build_yay()
 
         if not self.username:
             self.username = inp("Enter username: ")
 
-        System.install_pkgs(pkgs, pkgmngr="yay", user=self.username)
+        system.install_pkgs(pkgs, pkgmngr="yay", user=self.username)
 
     def install_themes(self):
         if Path(self.theme_dir()).exists():
@@ -493,9 +203,9 @@ class Setup(object):
         os.makedirs(self.theme_dir())
 
         git_theme_dir = self.git_conf_dir() / "themes"
-        System.extar(git_theme_dir / "Sweet-Dark.tar.xz", self.theme_dir())
-        System.extar(git_theme_dir / "Sweet-Purple.tar.xz", self.theme_dir())
-        System.extar(git_theme_dir / "Sweet-Teal.tar.xz", self.theme_dir())
+        system.extar(git_theme_dir / "Sweet-Dark.tar.xz", self.theme_dir())
+        system.extar(git_theme_dir / "Sweet-Purple.tar.xz", self.theme_dir())
+        system.extar(git_theme_dir / "Sweet-Teal.tar.xz", self.theme_dir())
 
         run(
             "unzip",
@@ -505,8 +215,8 @@ class Setup(object):
                 str(self.theme_dir()),
             ],
         )
-        System.gitclone(f"{REPO_BASE}/gruvbox-gtk", self.theme_dir() / "gruvbox-gtk")
-        System.gitclone(f"{REPO_BASE}/Aritim-Dark", self.theme_dir() / "aritim")
+        system.gitclone(f"{REPO_BASE}/gruvbox-gtk", self.theme_dir() / "gruvbox-gtk")
+        system.gitclone(f"{REPO_BASE}/Aritim-Dark", self.theme_dir() / "aritim")
         run("mv", [str(self.theme_dir() / "aritim/GTK"), str(self.theme_dir() / "Aritim-Dark")])
         shutil.rmtree(str(self.theme_dir() / "aritim"))
 
@@ -535,8 +245,8 @@ class Setup(object):
         for d in conf_dirs:
             d.mkdir(parents=True, exist_ok=True)
 
-        System.gitclone(GIT_CONF_REPO, self.git_conf_dir())
-        System._link(self.git_conf_dir(), self.userhome / "dev" / "conf")
+        system.gitclone(GIT_CONF_REPO, self.git_conf_dir())
+        system._link(self.git_conf_dir(), self.userhome / "dev" / "conf")
 
         conf_files = [
             ".bashrc",
@@ -565,7 +275,7 @@ class Setup(object):
         ]
 
         for f in conf_files:
-            System.link(self.git_conf_dir(), f, self.userhome)
+            system.link(self.git_conf_dir(), f, self.userhome)
 
         global_files = [
             "/etc/lightdm/lightdm.conf",
@@ -577,20 +287,20 @@ class Setup(object):
         ]
 
         for f in global_files:
-            System.link(self.git_conf_dir(), f, Path("/"))
+            system.link(self.git_conf_dir(), f, Path("/"))
 
-        System.chmod("+x", self.git_conf_dir() / ".config/bspwm/bspwmrc")
+        system.chmod("+x", self.git_conf_dir() / ".config/bspwm/bspwmrc")
 
         fwrite(Path("/etc/profile"), "export XDG_CONFIG_DIR=$HOME/.config")
 
-        System.chown(self.git_conf_dir(), self.username, self.username)
-        System.chown(self.userhome, self.username, self.username)
+        system.chown(self.git_conf_dir(), self.username, self.username)
+        system.chown(self.userhome, self.username, self.username)
 
     def install_scripts(self):
         scripts_dir = Path("/usr/local/scripts")
-        System.gitclone(GIT_SCRIPTS_REPO, scripts_dir)
-        System.chown(scripts_dir, self.username, self.username)
-        System._link(scripts_dir, self.userhome / "dev" / "scripts")
+        system.gitclone(GIT_SCRIPTS_REPO, scripts_dir)
+        system.chown(scripts_dir, self.username, self.username)
+        system._link(scripts_dir, self.userhome / "dev" / "scripts")
 
         p = Path("/etc/profile.d/scripts_path.sh")
         if not p.exists():
@@ -598,19 +308,19 @@ class Setup(object):
 
     def set_lang(self):
         lang = inp_or_default("Enter system language", LANG) if self.ask else LANG
-        System.set_lang(lang)
+        system.set_lang(lang)
 
     def set_keymap(self):
         keymap = inp_or_default("Enter keymap", KEYMAP) if self.ask else KEYMAP
-        System.set_keymap(keymap)
+        system.set_keymap(keymap)
 
     def set_timezone(self):
         region = inp_or_default("Enter region", REGION) if self.ask else REGION
         city = inp_or_default("Enter city", CITY) if self.ask else CITY
-        System.set_timezone(region, city)
+        system.set_timezone(region, city)
 
     def datetime_location_setup(self):
-        s = System
+        s = system
         s.gen_locale(LOCALES)
         self.set_lang()
         self.set_keymap()
@@ -625,25 +335,25 @@ class Setup(object):
         url = "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
         if not f.exists():
             bash(f"curl -fLo {f} --create-dirs {url}")
-            System.chown(self.xdg_conf_dir(), self.username, self.username)
+            system.chown(self.xdg_conf_dir(), self.username, self.username)
 
     def install_nvim_plugins(self):
-        System.install_pkg_if_bin_not_exists("nvim", pkg="neovim")
+        system.install_pkg_if_bin_not_exists("nvim", pkg="neovim")
         self.install_vim_plug()
         p = self.xdg_conf_dir().joinpath("/nvim/init.vim")
         if Path(p).exists():
-            System.nvim("PlugInstall|q|q")
+            system.nvim("PlugInstall|q|q")
         else:
             eprint(f"Missing nvim config file at {p}")
 
-        System.install_pkg_if_bin_not_exists("pip2", "python2-pip")
-        System.install_pkg_if_bin_not_exists("pip", "python-pip")
+        system.install_pkg_if_bin_not_exists("pip2", "python2-pip")
+        system.install_pkg_if_bin_not_exists("pip", "python-pip")
         run("pip", ["install", "neovim"])
         run("pip2", ["install", "neovim"])
 
     def install_coc_extensions(self):
         for ext in PKGS["coc"]:
-            System.nvim(f"CocInstall -sync {ext}|q|q")
+            system.nvim(f"CocInstall -sync {ext}|q|q")
 
     def setup(self):
         steps(
@@ -653,7 +363,7 @@ class Setup(object):
                     "Initialize localization/time/hostname?",
                     self.datetime_location_setup,
                 ),
-                ("Run Reflector?", System.install_and_run_reflector),
+                ("Run Reflector?", system.install_and_run_reflector),
                 ("Install community packages?", self.install_pkgs, PKGS["community"]),
                 ("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
                 ("Install configs?", self.install_configs),
