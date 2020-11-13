@@ -123,11 +123,11 @@ class Init(object):
             follow=False,
         )
 
-    def copy_self(self):
-        system.cp(str(FULLPATH), f"{self.location}/{FILENAME}")
+    def archive_scripts(self):
+        run("zip", ["-r", f"{self.location}/{FILENAME}", f"{FULLPATH.parent}/*"])
 
     def init_setup(self):
-        self.copy_self()
+        self.archive_scripts()
         cmd = f"/usr/bin/python {FILENAME} setup"
         if self.cfg.auto:
             cmd += self.cfg.as_args_str(location=False)
