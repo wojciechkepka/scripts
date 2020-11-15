@@ -114,15 +114,24 @@ def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, fol
     If display is false all output will be hidden"""
     s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
     print(f"{BWHITE}Running{NC} `{s}`")
+
+    p = _subprocess(cmd, args, redirect=redirect)
+    result = _run_follow(p, display=display) if follow else _run(p, display=display)
+    if result.is_err() and quit:
+        sys.exit(result.exit_code)
+
+
+def safe_run(cmd: str, args: List[str], display=True, quit=False, redirect=False, follow=True):
+    """Wrapper for run function catching all exceptions and printing them to stderr.
+    If there is any exception and quit is True then the program will terminate with
+    exit code 1."""
     try:
-        p = _subprocess(cmd, args, redirect=redirect)
-        result = _run_follow(p, display=display) if follow else _run(p, display=display)
-
-        if result.is_err() and quit:
-            sys.exit(result.exit_code)
-
+        run(cmd, args, display=display, quit=quit, redirect=redirect, follow=follow)
     except Exception as e:
+        s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
         sys.stderr.write(f"{BWHITE}Failed running command{NC} `{s}` - {RED}{e}{NC}")
+        if quit:
+            sys.exit(1)
 
 
 def bash(cmd: str, quit=False):
