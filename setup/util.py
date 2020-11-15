@@ -32,6 +32,16 @@ NC = "\033[0m"
 ################################################################################
 
 
+class CmdResult(object):
+    def __init__(self, exit_code: int, stdout: str, stderr: str):
+        self.stdout = stdout
+        self.stderr = stderr
+        self.exit_code = exit_code
+
+    def is_err(self) -> bool:
+        return self.exit_code != 0
+
+
 def eprint(msg: str):
     """Prints a message to stderr in red color."""
     sys.stderr.write(RED + msg + NC)
@@ -51,6 +61,51 @@ def inp_or_default(msg: str, default) -> str:
     return x if x else default
 
 
+def _run_follow(process: subprocess.Popen, display=True) -> CmdResult:
+    (stdout, stderr) = ("", "")
+    if display:
+        sys.stdout.write(GREEN)
+    for c in iter(lambda: process.stdout.read(1), b""):
+        ch = c.decode("utf-8")
+        stdout += ch
+        sys.stdout.write(ch)
+    sys.stdout.write(NC)
+
+    if display:
+        sys.stderr.write(RED)
+    for c in iter(lambda: process.stderr.read(1), b""):
+        ch = c.decode("utf-8")
+        stderr += ch
+        sys.stderr.write(ch)
+    sys.stderr.write(NC)
+
+    return CmdResult(process.exit_code, stdout, stderr)
+
+
+def _run(process: subprocess.Popen, display=True) -> CmdResult:
+    (stdout, stderr) = process.communicate()
+    if process.returncode != 0:
+        if display and stderr:
+            eprint("ERROR: " + stderr.decode("utf-8"))
+    else:
+        if display and stdout:
+            sys.stdout.write(GREEN + stdout.decode("utf-8") + NC)
+
+    return CmdResult(process.returncode, stdout, stderr)
+
+
+def _subprocess(cmd: str, args: List[str], redirect=False) -> subprocess.Popen:
+    if not redirect:
+        return subprocess.Popen([cmd] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else:
+        return subprocess.Popen([cmd] + args, stdout=sys.stdout, stderr=sys.stderr)
+
+
+def run_ret(cmd: str, args: List[str], display=False, redirect=False) -> CmdResult:
+    p = _subprocess(cmd, args, redirect=redirect)
+    return _run(p, display=display)
+
+
 def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, follow=True):
     """Runs specified cmd with args in a subprocess.
     If redirect is true stdout and stderr will be redirected directly to main processes fd.
@@ -60,37 +115,11 @@ def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, fol
     s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
     print(f"{BWHITE}Running{NC} `{s}`")
     try:
-        p = (
-            subprocess.Popen([cmd] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if not redirect
-            else subprocess.Popen([cmd] + args, stdout=sys.stdout, stderr=sys.stderr)
-        )
-        if follow and display:
-            sys.stdout.write(GREEN)
-            for c in iter(lambda: p.stdout.read(1), b""):
-                try:
-                    sys.stdout.write(c.decode("utf-8"))
-                except:
-                    pass
-            sys.stderr.write(RED)
-            for c in iter(lambda: p.stderr.read(1), b""):
-                try:
-                    sys.stderr.write(c.decode("utf-8"))
-                except:
-                    pass
-            sys.stdout.write(NC)
-            sys.stderr.write(NC)
-        else:
-            (stdout, stderr) = p.communicate()
-            if p.returncode != 0:
-                if display and stderr:
-                    eprint("ERROR: " + stderr.decode("utf-8"))
-            else:
-                if display and stdout:
-                    sys.stdout.write(GREEN + stdout.decode("utf-8") + NC)
+        p = _subprocess(cmd, args, redirect=redirect)
+        result = _run_follow(p, display=display) if follow else _run(p, display=display)
 
-        if p.returncode != 0 and quit:
-            sys.exit(p.returncode)
+        if result.is_err() and quit:
+            sys.exit(result.exit_code)
 
     except Exception as e:
         sys.stderr.write(f"{BWHITE}Failed running command{NC} `{s}` - {RED}{e}{NC}")
