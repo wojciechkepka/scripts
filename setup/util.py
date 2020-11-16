@@ -12,7 +12,7 @@ import sys
 import subprocess
 import termios
 import tty
-from typing import List
+from typing import List, Callable, Any, Optional
 from pathlib import Path
 from enum import Enum
 
@@ -70,21 +70,15 @@ def ask_user_yn(msg: str, f, *args, ask=True):
         f(*args)
 
 
-def steps(s, ask=True):
+def run_steps(steps: List[Step], ask=True):
     """Executes a list of steps asking the user for choice on each step and catching
-    exceptions on each step."""
-    for step in s:
+    exceptions on each step. If ask is set to False all steps will be executed automatically."""
+    for step in steps:
         try:
-            if len(step) > 2:
-                ask_user_yn(step[0], step[1], *step[2:], ask=ask)
-            else:
-                ask_user_yn(step[0], step[1], ask=ask)
+            step.run(ask=ask)
         except Exception as e:
-            if len(step) < 2:
-                sys.stderr.write(f"{Color.BWHITE}Invalid step{Color.NC} `{s}` - {Color.RED}{e}{Color.NC}")
-            else:
-                s = f"{Color.LBLUE}{step[0]}({' '.join(step[1:])}){Color.NC}"
-                sys.stderr.write(f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` - {Color.RED}{e}{Color.NC}")
+            s = f"{Color.LBLUE}{step[0]}({' '.join(step[1:])}){Color.NC}"
+            sys.stderr.write(f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` - {Color.RED}{e}{Color.NC}")
 
 
 def getch():
@@ -223,3 +217,22 @@ class Command(object):
 
             if quit:
                 sys.exit(1)
+
+
+class Step(object):
+    """Step is a represantion of a setup step. Each step has a message that is printed to user as
+    a y/n question. If the users answer is yes, function func will be called with
+    args."""
+
+    def __init__(self, message: str, func: Callable, *args: Any):
+        self.message = message
+        self.func = func
+        self.args = [*args]
+
+    def run(self, ask: bool = True):
+        """If ask is set to True the user will be prompted for a y/n answer on
+        whether to execute this step, otherwise the step will be automatically executed."""
+        if self.args:
+            ask_user_yn(self.message, self.func, *self.args, ask=ask)
+        else:
+            ask_user_yn(self.message, self.func, ask=ask)

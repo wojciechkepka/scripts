@@ -18,7 +18,7 @@ import urllib.request
 import system
 from pathlib import Path
 from typing import List, Dict
-from util import Color, Command, inp, inp_or_default, bash, steps, fwrite, eprint
+from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~|
@@ -137,11 +137,11 @@ class Init(object):
         self.arch_chroot(cmd)
 
     def init(self):
-        steps(
+        run_steps(
             [
-                ("Install base packages?", self.pacstrap, PKGS["base"]),
-                ("Generate fstab?", self.gen_fstab),
-                ("Run setup?", self.init_setup),
+                Step("Install base packages?", self.pacstrap, PKGS["base"]),
+                Step("Generate fstab?", self.gen_fstab),
+                Step("Run setup?", self.init_setup),
             ],
             ask=not self.cfg.auto,
         )
@@ -370,23 +370,23 @@ class Setup(object):
         Command("mkinitcpio", ["-P"]).safe_run()
 
     def setup(self):
-        steps(
+        run_steps(
             [
-                ("Create user?", self.create_user),
-                (
+                Step("Create user?", self.create_user),
+                Step(
                     "Initialize localization/time/hostname?",
                     self.datetime_location_setup,
                 ),
-                ("Run Reflector?", system.install_and_run_reflector),
-                ("Install community packages?", self.install_pkgs, PKGS["community"]),
-                ("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
-                ("Install configs?", self.install_configs),
-                ("Install scripts?", self.install_scripts),
-                ("Install themes?", self.install_themes),
-                ("Install nvim plugins?", self.install_nvim_plugins),
-                ("Install coc extensions?", self.install_coc_extensions),
-                ("Install GRUB?", self.install_grub),
-                ("Run mkinitcpio?", self.mkinitram),
+                Step("Run Reflector?", system.install_and_run_reflector),
+                Step("Install community packages?", self.install_pkgs, PKGS["community"]),
+                Step("Install AUR packages?", self.install_pkgs, PKGS["aur"]),
+                Step("Install configs?", self.install_configs),
+                Step("Install scripts?", self.install_scripts),
+                Step("Install themes?", self.install_themes),
+                Step("Install nvim plugins?", self.install_nvim_plugins),
+                Step("Install coc extensions?", self.install_coc_extensions),
+                Step("Install GRUB?", self.install_grub),
+                Step("Run mkinitcpio?", self.mkinitram),
             ],
             ask=self.ask,
         )
