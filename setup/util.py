@@ -35,7 +35,7 @@ def inp(msg: str) -> str:
     return inp
 
 
-def inp_or_default(msg: str, default) -> str:
+def inp_or_default(msg: str, default: str) -> str:
     """Asks user for input printing msg first. If users input is empty uses default as return"""
     x = inp(msg + f"(default - '{Color.YELLOW}{default}{Color.NC}'): ")
     return x if x else default
@@ -46,7 +46,7 @@ def bash(cmd: str, quit=False):
     Command("/bin/bash", ["-c", cmd], quit=quit).run()
 
 
-def ask_user_yn(msg: str, f, *args, ask=True):
+def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
     """Asks user for y/n choice on msg. If the answer is yes calls function f with *args"""
     sys.stdout.write(
         Color.BWHITE + msg + f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: "
