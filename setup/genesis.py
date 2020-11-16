@@ -18,7 +18,7 @@ import urllib.request
 import system
 from pathlib import Path
 from typing import List, Dict
-from util import *
+from util import safe_run, run, inp, inp_or_default, bash, Color, steps, fwrite, eprint
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~|
@@ -49,7 +49,9 @@ FULLPATH = FILENAME.absolute()
 try:
     PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
 except Exception as e:
-    sys.stderr.write(f"{BWHITE}Failed to get pkgs data from{NC} `{LBLUE}{PKG_URL}{NC}` - {RED}{e}{NC}\n")
+    sys.stderr.write(
+        f"{Color.BWHITE}Failed to get pkgs data from{Color.NC} `{Color.LBLUE}{PKG_URL}{Color.NC}` - {Color.RED}{e}{Color.NC}\n"
+    )
     PGKS: Dict[str, List[str]] = {
         "base": ["base", "base-devel", "linux", "linux-firmware", "lvm2", "mdadm", "dhcpcd"],
         "community": [],
@@ -428,11 +430,11 @@ class Genesis(object):
             elif self.cmd == "setup":
                 Setup(self.cfg).setup()
         except KeyboardInterrupt:
-            print(f"\n{BWHITE}Exiting...{NC}")
+            print(f"\n{Color.BWHITE}Exiting...{Color.NC}")
             sys.exit(0)
         except Exception:
-            eprint(f"{BWHITE}Unhandled exception{NC}\n")
-            eprint(f"{RED}{traceback.format_exc()}{NC}")
+            eprint(f"{Color.BWHITE}Unhandled exception{Color.NC}\n")
+            eprint(f"{Color.RED}{traceback.format_exc()}{Color.NC}")
             sys.exit(1)
 
 

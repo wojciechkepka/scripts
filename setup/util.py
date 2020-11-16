@@ -14,18 +14,22 @@ import termios
 import tty
 from typing import List
 from pathlib import Path
+from enum import Enum
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~|
 ################################################################################
 
-LBLUE = "\033[1;94m"
-CYAN = "\033[0;36m"
-GREEN = "\033[0;32m"
-YELLOW = "\033[0;33m"
-RED = "\033[0;31m"
-BWHITE = "\033[1;37m"
-NC = "\033[0m"
+
+class Color(Enum):
+    LBLUE = "\033[1;94m"
+    CYAN = "\033[0;36m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[0;33m"
+    RED = "\033[0;31m"
+    BWHITE = "\033[1;37m"
+    NC = "\033[0m"
+
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -44,40 +48,40 @@ class CmdResult(object):
 
 def eprint(msg: str):
     """Prints a message to stderr in red color."""
-    sys.stderr.write(RED + msg + NC)
+    sys.stderr.write(Color.RED + msg + Color.NC)
 
 
 def inp(msg: str) -> str:
     """Takes input from user printing msg first."""
-    sys.stdout.write(BWHITE + msg + CYAN)
+    sys.stdout.write(Color.BWHITE + msg + Color.CYAN)
     inp = input()
-    sys.stdout.write(NC)
+    sys.stdout.write(Color.NC)
     return inp
 
 
 def inp_or_default(msg: str, default) -> str:
     """Asks user for input printing msg first. If users input is empty uses default as return"""
-    x = inp(msg + f"(default - '{YELLOW}{default}{NC}'): ")
+    x = inp(msg + f"(default - '{Color.YELLOW}{default}{Color.NC}'): ")
     return x if x else default
 
 
 def _run_follow(process: subprocess.Popen, display=True) -> CmdResult:
     (stdout, stderr) = ("", "")
     if display:
-        sys.stdout.write(GREEN)
+        sys.stdout.write(Color.GREEN)
     for c in iter(lambda: process.stdout.read(1), b""):
         ch = c.decode("utf-8")
         stdout += ch
         sys.stdout.write(ch)
-    sys.stdout.write(NC)
+    sys.stdout.write(Color.NC)
 
     if display:
-        sys.stderr.write(RED)
+        sys.stderr.write(Color.RED)
     for c in iter(lambda: process.stderr.read(1), b""):
         ch = c.decode("utf-8")
         stderr += ch
         sys.stderr.write(ch)
-    sys.stderr.write(NC)
+    sys.stderr.write(Color.NC)
 
     return CmdResult(process.exit_code, stdout, stderr)
 
@@ -89,7 +93,7 @@ def _run(process: subprocess.Popen, display=True) -> CmdResult:
             eprint("ERROR: " + stderr.decode("utf-8"))
     else:
         if display and stdout:
-            sys.stdout.write(GREEN + stdout.decode("utf-8") + NC)
+            sys.stdout.write(Color.GREEN + stdout.decode("utf-8") + Color.NC)
 
     return CmdResult(process.returncode, stdout, stderr)
 
@@ -112,8 +116,8 @@ def run(cmd: str, args: List[str], display=True, quit=False, redirect=False, fol
     If follow is true the output of subprocess will be printed as it is filled.
     If quit is true and returncode was other than 0 main process exits with returncode.
     If display is false all output will be hidden"""
-    s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
-    print(f"{BWHITE}Running{NC} `{s}`")
+    s = f"{Color.LBLUE}{cmd} {' '.join(args)}{Color.NC}"
+    print(f"{Color.BWHITE}Running{Color.NC} `{s}`")
 
     p = _subprocess(cmd, args, redirect=redirect)
     result = _run_follow(p, display=display) if follow else _run(p, display=display)
@@ -128,8 +132,8 @@ def safe_run(cmd: str, args: List[str], display=True, quit=False, redirect=False
     try:
         run(cmd, args, display=display, quit=quit, redirect=redirect, follow=follow)
     except Exception as e:
-        s = f"{LBLUE}{cmd} {' '.join(args)}{NC}"
-        sys.stderr.write(f"{BWHITE}Failed running command{NC} `{s}` - {RED}{e}{NC}")
+        s = f"{Color.LBLUE}{cmd} {' '.join(args)}{Color.NC}"
+        sys.stderr.write(f"{Color.BWHITE}Failed running command{Color.NC} `{s}` - {Color.RED}{e}{Color.NC}")
         if quit:
             sys.exit(1)
 
@@ -141,23 +145,25 @@ def bash(cmd: str, quit=False):
 
 def ask_user_yn(msg: str, f, *args, ask=True):
     """Asks user for y/n choice on msg. If the answer is yes calls function f with *args"""
-    sys.stdout.write(BWHITE + msg + f" {GREEN}y(es){NC}/{RED}n(o){NC}/{YELLOW}q(uit){NC}: ")
+    sys.stdout.write(
+        Color.BWHITE + msg + f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: "
+    )
     sys.stdout.flush()
     if ask:
         while True:
             ch = getch()
             if ch == "y":
-                sys.stdout.write(CYAN + ch + "\n" + NC)
+                sys.stdout.write(Color.CYAN + ch + "\n" + Color.NC)
                 f(*args)
                 break
             elif ch == "n":
-                sys.stdout.write(CYAN + ch + "\n" + NC)
+                sys.stdout.write(Color.CYAN + ch + "\n" + Color.NC)
                 break
             elif ch == "q":
-                sys.stdout.write(CYAN + ch + "\n" + NC)
+                sys.stdout.write(Color.CYAN + ch + "\n" + Color.NC)
                 raise KeyboardInterrupt
     else:
-        sys.stdout.write(CYAN + "y\n" + NC)
+        sys.stdout.write(Color.CYAN + "y\n" + Color.NC)
         f(*args)
 
 
@@ -185,5 +191,5 @@ def getch():
 def fwrite(p: Path, s: str):
     """Writes s to a file in path p"""
     with open(p, "w") as f:
-        print(f"{BWHITE}Writing{NC} `{s}` to {LBLUE}`{str(p)}`{NC}")
+        print(f"{Color.BWHITE}Writing{Color.NC} `{s}` to {Color.LBLUE}`{str(p)}`{Color.NC}")
         f.write(s)
