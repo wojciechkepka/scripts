@@ -18,7 +18,7 @@ import urllib.request
 import system
 from pathlib import Path
 from typing import List, Dict
-from util import safe_run, run, inp, inp_or_default, bash, Color, steps, fwrite, eprint
+from util import Color, Command, inp, inp_or_default, bash, steps, fwrite, eprint
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~|
@@ -114,19 +114,19 @@ class Init(object):
         )
 
     def pacstrap(self, pkgs: List[str]):
-        run("/usr/bin/pacstrap", [self.location] + pkgs, quit=True)
+        Command("/usr/bin/pacstrap", [self.location] + pkgs, quit=True).safe_run(reraise=False)
 
     def arch_chroot(self, cmd: str):
-        run(
+        Command(
             "/usr/bin/arch-chroot",
             [self.location, "/bin/bash", "-c", cmd],
             quit=True,
             redirect=True,
             follow=False,
-        )
+        ).safe_run(reraise=False)
 
     def archive_scripts(self):
-        run("zip", ["-r", f"{self.location}/{FILENAME}", f"{FULLPATH.parent}/*"])
+        Command("zip", ["-r", f"{self.location}/{FILENAME}", f"{FULLPATH.parent}/*"]).safe_run(reraise=False)
 
     def init_setup(self):
         self.archive_scripts()
@@ -209,17 +209,17 @@ class Setup(object):
         system.extar(git_theme_dir / "Sweet-Purple.tar.xz", self.theme_dir())
         system.extar(git_theme_dir / "Sweet-Teal.tar.xz", self.theme_dir())
 
-        run(
+        Command(
             "unzip",
             [
                 str(git_theme_dir / "Solarized-Dark-Orange_2.0.1.zip"),
                 "-d",
                 str(self.theme_dir()),
             ],
-        )
+        ).safe_run()
         system.gitclone(f"{REPO_BASE}/gruvbox-gtk", self.theme_dir() / "gruvbox-gtk")
         system.gitclone(f"{REPO_BASE}/Aritim-Dark", self.theme_dir() / "aritim")
-        run("mv", [str(self.theme_dir() / "aritim/GTK"), str(self.theme_dir() / "Aritim-Dark")])
+        Command("mv", [str(self.theme_dir() / "aritim/GTK"), str(self.theme_dir() / "Aritim-Dark")]).safe_run()
         shutil.rmtree(str(self.theme_dir() / "aritim"))
 
     def install_configs(self):
@@ -350,8 +350,8 @@ class Setup(object):
 
         system.install_pkg_if_bin_not_exists("pip2", "python2-pip")
         system.install_pkg_if_bin_not_exists("pip", "python-pip")
-        run("pip", ["install", "neovim"])
-        run("pip2", ["install", "neovim"])
+        Command("pip", ["install", "neovim"]).safe_run()
+        Command("pip2", ["install", "neovim"]).safe_run()
 
     def install_coc_extensions(self):
         for ext in PKGS["coc"]:
@@ -361,11 +361,13 @@ class Setup(object):
         system.install_pkgs(["grub", "efibootmgr"], pkgmngr="yay", user=self.username)
         location = inp("Enter boot partition location: ")
         if location:
-            run("grub-install", ["--target=x86_64-efi", f"--efi-directory={location}", "--bootloader-id=GRUB"])
-            run("grub-mkconfig", ["-o", "{location}/grub/grub.cfg"])
+            Command(
+                "grub-install", ["--target=x86_64-efi", f"--efi-directory={location}", "--bootloader-id=GRUB"]
+            ).safe_run()
+            Command("grub-mkconfig", ["-o", "{location}/grub/grub.cfg"]).safe_run()
 
     def mkinitram(self):
-        run("mkinitcpio", ["-P"])
+        Command("mkinitcpio", ["-P"]).safe_run()
 
     def setup(self):
         steps(

@@ -12,7 +12,7 @@ import shutil
 import os
 from tempfile import TemporaryDirectory
 from typing import List
-from util import run, fwrite, bash
+from util import Command, fwrite, bash
 from pathlib import Path
 
 ################################################################################
@@ -29,46 +29,46 @@ YAY_REPO = f"{ARCH_URL}/yay.git"
 
 
 def chmod(flags: str, f: Path):
-    run("chmod", [flags, "--verbose", str(f)])
+    Command("chmod", [flags, "--verbose", str(f)]).safe_run()
 
 
 def chown(p: Path, user: str, group: str, recursive=True):
-    run(
+    Command(
         "chown",
         ["-R", f"{user}:{group}", str(p)] if recursive else [f"{user}:{group}", str(p)],
-    )
+    ).safe_run()
 
 
 def cp(f1: Path, f2: Path):
-    run("cp", ["--verbose", str(f1), str(f2)])
+    Command("cp", ["--verbose", str(f1), str(f2)]).safe_run()
 
 
 def gitclone(repo: str, where=Path("")):
     p = str(where)
     install_pkg_if_bin_not_exists("git")
-    run("git", ["clone", repo, p] if p else ["clone", repo])
+    Command("git", ["clone", repo, p] if p else ["clone", repo]).safe_run()
 
 
 def nvim(cmd: str):
-    run("nvim", ["--headless", "-c", f'"{cmd}"'])
+    Command("nvim", ["--headless", "-c", f'"{cmd}"']).safe_run()
 
 
 def extar(f: Path, to: Path):
-    run(
+    Command(
         "tar",
         [
             "--extract",
             f"--file={str(f)}",
             f"--directory={str(to)}",
         ],
-    )
+    ).safe_run()
 
 
 def _link(f: Path, to: Path):
-    run(
+    Command(
         "ln",
         ["--symbolic", "--force", "--verbose", str(f), str(to)],
-    )
+    ).safe_run()
 
 
 def link(base: Path, f: str, out: Path):
@@ -88,14 +88,14 @@ def create_user(user: str, password=""):
     if password:
         args += ["--password", password]
 
-    run(
+    Command(
         "useradd",
         args + [user],
         quit=True,
-    )
+    ).safe_run()
 
     if not password:
-        run("passwd", [user], redirect=True, follow=False)
+        Command("passwd", [user], redirect=True, follow=False).safe_run()
 
 
 def bins_exist(bins: List[str]):
@@ -106,7 +106,7 @@ def bins_exist(bins: List[str]):
 
 
 def install_pkgs(pkgs: List[str], pkgmngr="/usr/bin/pacman", user="root"):
-    run("sudo", ["-u", user, pkgmngr, "--sync", "--noconfirm"] + pkgs)
+    Command("sudo", ["-u", user, pkgmngr, "--sync", "--noconfirm"] + pkgs).safe_run()
 
 
 def install_pkg_if_bin_not_exists(binary: str, pkg=""):
@@ -120,10 +120,10 @@ def install_sudo():
 
 def install_and_run_reflector():
     install_pkg_if_bin_not_exists("reflector")
-    run(
+    Command(
         "reflector",
         ["-l", "100", "--sort", "rate", "--save", "/etc/pacman.d/mirrorlist"],
-    )
+    ).safe_run()
 
 
 def build_yay():
@@ -156,7 +156,7 @@ def gen_locale(locales: List[str]):
                 if line.startswith(f"#{locale}"):
                     line = locale
 
-    run("locale-gen", [])
+    Command("locale-gen", []).safe_run()
 
 
 def set_lang(lang: str):
