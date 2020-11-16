@@ -355,6 +355,16 @@ class Setup(object):
         for ext in PKGS["coc"]:
             system.nvim(f"CocInstall -sync {ext}|q|q")
 
+    def install_grub(self):
+        system.install_pkgs(["grub", "efibootmgr"], pkgmngr="yay", user=self.username)
+        location = inp("Enter boot partition location: ")
+        if location:
+            run("grub-install", ["--target=x86_64-efi", f"--efi-directory={location}", "--bootloader-id=GRUB"])
+            run("grub-mkconfig", ["-o", "{location}/grub/grub.cfg"])
+
+    def mkinitram(self):
+        run("mkinitcpio", ["-P"])
+
     def setup(self):
         steps(
             [
@@ -371,6 +381,8 @@ class Setup(object):
                 ("Install themes?", self.install_themes),
                 ("Install nvim plugins?", self.install_nvim_plugins),
                 ("Install coc extensions?", self.install_coc_extensions),
+                ("Install GRUB?", self.install_grub),
+                ("Run mkinitcpio?", self.mkinitram),
             ],
             ask=self.ask,
         )
