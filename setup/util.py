@@ -158,7 +158,7 @@ class Command(object):
 
         if self.display:
             sys.stderr.write(str(Color.RED))
-        self.stder = ""
+        self.stderr = ""
         for c in iter(lambda: process.stderr.read(1), b""):
             try:
                 ch = c.decode("utf-8")
