@@ -12,6 +12,7 @@ import sys
 import subprocess
 import termios
 import tty
+import traceback
 from typing import List, Callable, Any, Optional
 from pathlib import Path
 from enum import Enum
@@ -70,15 +71,6 @@ def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
         f(*args)
 
 
-def run_steps(steps: List[Step], ask=True):
-    """Executes a list of steps asking the user for choice on each step and catching
-    exceptions on each step. If ask is set to False all steps will be executed automatically."""
-    for step in steps:
-        try:
-            step.run(ask=ask)
-        except Exception as e:
-            s = f"{Color.LBLUE}{step[0]}({' '.join(step[1:])}){Color.NC}"
-            sys.stderr.write(f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` - {Color.RED}{e}{Color.NC}")
 
 
 def getch():
@@ -240,3 +232,14 @@ class Step(object):
             ask_user_yn(self.message, self.func, *self.args, ask=ask)
         else:
             ask_user_yn(self.message, self.func, ask=ask)
+
+
+def run_steps(steps: List[Step], ask=True):
+    """Executes a list of steps asking the user for choice on each step and catching
+    exceptions on each step. If ask is set to False all steps will be executed automatically."""
+    for step in steps:
+        try:
+            step.run(ask=ask)
+        except Exception as e:
+            s = f"{Color.LBLUE}{step[0]}({' '.join(step[1:])}){Color.NC}"
+            sys.stderr.write(f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` -\n{Color.RED}{traceback.format_exc()}{Color.NC}")
