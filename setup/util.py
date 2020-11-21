@@ -24,14 +24,14 @@ from enum import Enum
 
 def eprint(msg: str):
     """Prints a message to stderr in red color."""
-    sys.stderr.write(Color.RED + msg + Color.NC)
+    sys.stderr.write(str(Color.RED) + msg + str(Color.NC))
 
 
 def inp(msg: str) -> str:
     """Takes input from user printing msg first."""
-    sys.stdout.write(Color.BWHITE + msg + Color.CYAN)
+    sys.stdout.write(str(Color.BWHITE) + msg + str(Color.CYAN))
     inp = input()
-    sys.stdout.write(Color.NC)
+    sys.stdout.write(str(Color.NC))
     return inp
 
 
@@ -49,24 +49,24 @@ def bash(cmd: str, quit=False):
 def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
     """Asks user for y/n choice on msg. If the answer is yes calls function f with *args"""
     sys.stdout.write(
-        Color.BWHITE + msg + f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: "
+        str(Color.BWHITE) + msg + f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: "
     )
     sys.stdout.flush()
     if ask:
         while True:
             ch = getch()
             if ch == "y":
-                sys.stdout.write(Color.CYAN + ch + "\n" + Color.NC)
+                sys.stdout.write(str(Color.CYAN) + ch + "\n" + str(Color.NC))
                 f(*args)
                 break
             elif ch == "n":
-                sys.stdout.write(Color.CYAN + ch + "\n" + Color.NC)
+                sys.stdout.write(str(Color.CYAN) + ch + "\n" + str(Color.NC))
                 break
             elif ch == "q":
-                sys.stdout.write(Color.CYAN + ch + "\n" + Color.NC)
+                sys.stdout.write(str(Color.CYAN) + ch + "\n" + str(Color.NC))
                 raise KeyboardInterrupt
     else:
-        sys.stdout.write(Color.CYAN + "y\n" + Color.NC)
+        sys.stdout.write(str(Color.CYAN) + "y\n" + str(Color.NC))
         f(*args)
 
 
@@ -116,6 +116,8 @@ class Color(Enum):
     BWHITE = "\033[1;37m"
     NC = "\033[0m"
 
+    def __str__(self):
+        return self.value
 
 class Command(object):
     """Command is a wrapper for running commands in a subprocess providing some utility
@@ -151,22 +153,24 @@ class Command(object):
     def _run_follow(self):
         process = self._subprocess()
         if self.display:
-            sys.stdout.write(Color.GREEN)
+            sys.stdout.write(str(Color.GREEN))
+        self.stdout = ""
         for c in iter(lambda: process.stdout.read(1), b""):
             ch = c.decode("utf-8")
             self.stdout += ch
             sys.stdout.write(ch)
 
         if self.display:
-            sys.stderr.write(Color.RED)
+            sys.stderr.write(str(Color.RED))
+        self.stder = ""
         for c in iter(lambda: process.stderr.read(1), b""):
             ch = c.decode("utf-8")
             self.stderr += ch
             sys.stderr.write(ch)
 
         if self.display:
-            sys.stdout.write(Color.NC)
-            sys.stderr.write(Color.NC)
+            sys.stdout.write(str(Color.NC))
+            sys.stderr.write(str(Color.NC))
 
         self.exit_code = process.returncode
 
@@ -181,7 +185,7 @@ class Command(object):
                 eprint("ERROR: " + stderr.decode("utf-8"))
         else:
             if self.display and stdout:
-                sys.stdout.write(Color.GREEN + stdout.decode("utf-8") + Color.NC)
+                sys.stdout.write(str(Color.GREEN) + stdout.decode("utf-8") + str(Color.NC))
 
     def __repr__(self):
         return f"{Color.LBLUE}{self.cmd} {' '.join(self.args)}{Color.NC}"
