@@ -189,3 +189,7 @@ def rm_sudo_nopasswd(user: str):
     p = f"/etc/sudoers.d/01{user}"
     if Path(p).exists():
         os.remove(p)
+
+
+def systemctl_enable(service: str):
+    Command("systemctl", ["enable", "-v", service]).safe_run()
