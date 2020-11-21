@@ -18,7 +18,7 @@ import urllib.request
 import system
 from pathlib import Path
 from typing import List, Dict
-from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step
+from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step, errw
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~|
@@ -49,7 +49,7 @@ FULLPATH = FILENAME.absolute()
 try:
     PKGS = json.loads(urllib.request.urlopen(PKG_URL).read())
 except Exception as e:
-    sys.stderr.write(
+    errw(
         f"{Color.BWHITE}Failed to get pkgs data from{Color.NC} `{Color.LBLUE}{PKG_URL}{Color.NC}` - {Color.RED}{e}{Color.NC}\n"
     )
     PGKS: Dict[str, List[str]] = {

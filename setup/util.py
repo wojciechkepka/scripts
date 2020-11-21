@@ -13,7 +13,7 @@ import subprocess
 import termios
 import tty
 import traceback
-from typing import List, Callable, Any, Optional
+from typing import List, Callable, Any, Optional, IO
 from pathlib import Path
 from enum import Enum
 
@@ -23,16 +23,29 @@ from enum import Enum
 ################################################################################
 
 
+def _w(fd: IO, *items: Any):
+    fd.write("".join([item.__str__() for item in items]))
+    fd.flush()
+
+
+def errw(*items: Any):
+    _w(sys.stderr, *items)
+
+
+def outw(*items: Any):
+    _w(sys.stdout, *items)
+
+
 def eprint(msg: str):
     """Prints a message to stderr in red color."""
-    sys.stderr.write(str(Color.RED) + msg + str(Color.NC))
+    errw(Color.RED, msg, Color.NC)
 
 
 def inp(msg: str) -> str:
     """Takes input from user printing msg first."""
-    sys.stdout.write(str(Color.BWHITE) + msg + str(Color.CYAN))
+    outw(Color.BWHITE, msg, Color.CYAN)
     inp = input()
-    sys.stdout.write(str(Color.NC))
+    outw(Color.NC)
     return inp
 
 
@@ -49,27 +62,22 @@ def bash(cmd: str, quit=False):
 
 def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
     """Asks user for y/n choice on msg. If the answer is yes calls function f with *args"""
-    sys.stdout.write(
-        str(Color.BWHITE)
-        + msg
-        + f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: "
-    )
-    sys.stdout.flush()
+    outw(Color.BWHITE, msg, f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: ")
     if ask:
         while True:
             ch = getch()
             if ch == "y":
-                sys.stdout.write(str(Color.CYAN) + ch + "\n" + str(Color.NC))
+                outw(Color.CYAN, ch, "\n", Color.NC)
                 f(*args)
                 break
             elif ch == "n":
-                sys.stdout.write(str(Color.CYAN) + ch + "\n" + str(Color.NC))
+                outw(Color.CYAN, ch, "\n", Color.NC)
                 break
             elif ch == "q":
-                sys.stdout.write(str(Color.CYAN) + ch + "\n" + str(Color.NC))
+                outw(Color.CYAN, ch, "\n", Color.NC)
                 raise KeyboardInterrupt
     else:
-        sys.stdout.write(str(Color.CYAN) + "y\n" + str(Color.NC))
+        outw(Color.CYAN, "y\n", Color.NC)
         f(*args)
 
 
@@ -146,30 +154,30 @@ class Command(object):
     def _run_follow(self):
         process = self._subprocess()
         if self.display:
-            sys.stdout.write(str(Color.GREEN))
+            outw(Color.GREEN)
         self.stdout = ""
         for c in iter(lambda: process.stdout.read(1), b""):
             try:
                 ch = c.decode("utf-8")
                 self.stdout += ch
-                sys.stdout.write(ch)
+                outw(ch)
             except:
                 pass
 
         if self.display:
-            sys.stderr.write(str(Color.RED))
+            errw(Color.RED)
         self.stderr = ""
         for c in iter(lambda: process.stderr.read(1), b""):
             try:
                 ch = c.decode("utf-8")
                 self.stderr += ch
-                sys.stderr.write(ch)
+                errw(ch)
             except:
                 pass
 
         if self.display:
-            sys.stdout.write(str(Color.NC))
-            sys.stderr.write(str(Color.NC))
+            outw(Color.NC)
+            errw(Color.NC)
 
         process.communicate()
         self.exit_code = process.returncode
@@ -185,7 +193,7 @@ class Command(object):
                 eprint("ERROR: " + stderr.decode("utf-8"))
         else:
             if self.display and stdout:
-                sys.stdout.write(str(Color.GREEN) + stdout.decode("utf-8") + str(Color.NC))
+                outw(Color.GREEN, stdout.decode("utf-8"), Color.NC)
 
     def __repr__(self):
         return f"{Color.LBLUE}{self.cmd} {' '.join(self.args)}{Color.NC}"
@@ -213,7 +221,7 @@ class Command(object):
             self.run()
         except Exception as e:
             if self.display:
-                sys.stderr.write(f"{Color.BWHITE}Failed running command{Color.NC} `{self}` - {Color.RED}{e}{Color.NC}")
+                errw(f"{Color.BWHITE}Failed running command{Color.NC} `{self}` - {Color.RED}{e}{Color.NC}")
 
             if reraise:
                 raise
@@ -247,8 +255,12 @@ def run_steps(steps: List[Step], ask=True):
     for step in steps:
         try:
             step.run(ask=ask)
-        except Exception as e:
+        except Exception:
             s = f"{Color.LBLUE}{step[0]}({' '.join(step[1:])}){Color.NC}"
-            sys.stderr.write(
+            errw(
                 f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` -\n{Color.RED}{traceback.format_exc()}{Color.NC}"
             )
+
+
+if __name__ == "__main__":
+    errw("test" "123", Color.RED, "1111")
