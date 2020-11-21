@@ -192,4 +192,4 @@ def rm_sudo_nopasswd(user: str):
 
 
 def systemctl_enable(service: str):
-    Command("systemctl", ["enable", "-v", service]).safe_run()
+    Command("systemctl", ["enable", service]).safe_run()
