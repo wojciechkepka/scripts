@@ -126,7 +126,7 @@ class Init(object):
         ).safe_run(reraise=False)
 
     def archive_scripts(self):
-        Command("zip", ["-r", f"{self.location}/{FILENAME}", f"{FULLPATH.parent}/*"]).safe_run(reraise=False)
+        bash(f"cd {FULLPATH.parent} && zip -r {self.location}/{FILENAME} ./*", quit=True)
 
     def init_setup(self):
         self.archive_scripts()
