@@ -141,6 +141,7 @@ class Command(object):
         self.redirect = redirect
         self.follow = follow
 
+        self.subprocess = None
         self.exit_code = None
         self.stdout = None
         self.stderr = None
@@ -151,49 +152,55 @@ class Command(object):
         else:
             return subprocess.Popen([self.cmd] + self.args, stdout=sys.stdout, stderr=sys.stderr)
 
+    def _follow_stdout(self):
+        try:
+            if self.display:
+                outw(Color.GREEN)
+            self.stdout = ""
+            for c in iter(lambda: self.subprocess.stdout.read(1), b""):
+                try:
+                    ch = c.decode("utf-8")
+                    self.stdout += ch
+                    outw(ch)
+                except:
+                    pass
+        finally:
+            if self.display:
+                outw(Color.NC)
+
+    def _follow_stderr(self):
+        try:
+            if self.display:
+                errw(Color.RED)
+            self.stderr = ""
+            for c in iter(lambda: self.subprocess.stderr.read(1), b""):
+                try:
+                    ch = c.decode("utf-8")
+                    self.stderr += ch
+                    errw(ch)
+                except:
+                    pass
+        finally:
+            if self.display:
+                errw(Color.NC)
+
     def _run_follow(self):
-        process = self._subprocess()
-        if self.display:
-            outw(Color.GREEN)
-        self.stdout = ""
-        for c in iter(lambda: process.stdout.read(1), b""):
-            try:
-                ch = c.decode("utf-8")
-                self.stdout += ch
-                outw(ch)
-            except:
-                pass
-
-        if self.display:
-            errw(Color.RED)
-        self.stderr = ""
-        for c in iter(lambda: process.stderr.read(1), b""):
-            try:
-                ch = c.decode("utf-8")
-                self.stderr += ch
-                errw(ch)
-            except:
-                pass
-
-        if self.display:
-            outw(Color.NC)
-            errw(Color.NC)
-
-        process.communicate()
-        self.exit_code = process.returncode
+        self.subprocess = self._subprocess()
+        self._follow_stdout()
+        self._follow_stderr()
+        self.subprocess.communicate()
+        self.exit_code = self.subprocess.returncode
 
     def _run(self):
-        process = self._subprocess()
-        (stdout, stderr) = process.communicate()
-        self.exit_code = process.returncode
-        self.stdout = stdout
-        self.stderr = stderr
+        self.subprocess = self._subprocess()
+        (self.stdout, self.stderr) = map(lambda x: x.decode("utf-8"), self.subprocess.communicate())
+        self.exit_code = self.subprocess.returncode
         if self.exit_code != 0:
-            if self.display and stderr:
-                eprint("ERROR: " + stderr.decode("utf-8"))
+            if self.display and self.stderr:
+                eprint("ERROR: " + self.stderr)
         else:
-            if self.display and stdout:
-                outw(Color.GREEN, stdout.decode("utf-8"), Color.NC)
+            if self.display and self.stdout:
+                outw(Color.GREEN, self.stdout, Color.NC)
 
     def __repr__(self):
         return f"{Color.LBLUE}{self.cmd} {' '.join(self.args)}{Color.NC}"
