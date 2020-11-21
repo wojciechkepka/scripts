@@ -260,7 +260,3 @@ def run_steps(steps: List[Step], ask=True):
             errw(
                 f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` -\n{Color.RED}{traceback.format_exc()}{Color.NC}"
             )
-
-
-if __name__ == "__main__":
-    errw("test" "123", Color.RED, "1111")
