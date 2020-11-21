@@ -170,6 +170,7 @@ class Command(object):
             sys.stdout.write(str(Color.NC))
             sys.stderr.write(str(Color.NC))
 
+        process.communicate()
         self.exit_code = process.returncode
 
     def _run(self):
