@@ -226,9 +226,9 @@ class Setup(object):
         finally:
             shutil.rmtree(str(self.theme_dir() / "aritim"))
 
-        system.cp(self.theme_dir() / "Dracula", Path("/usr/share/backgrounds/Dracula"))
-        system.cp(self.theme_dir() / "gruvbox-gtk", Path("/usr/share/backgrounds/gruvbox-gtk"))
-        system.cp(self.theme_dir() / "Aritim-Dark", Path("/usr/share/backgrounds/Aritim-Dark"))
+        system.cp(self.theme_dir() / "Dracula", Path("/usr/share/themes/Dracula"))
+        system.cp(self.theme_dir() / "gruvbox-gtk", Path("/usr/share/themes/gruvbox-gtk"))
+        system.cp(self.theme_dir() / "Aritim-Dark", Path("/usr/share/themes/Aritim-Dark"))
 
     def install_configs(self):
         conf_dirs = [
@@ -236,6 +236,7 @@ class Setup(object):
             self.xdg_conf_dir(),
             Path("/etc/lightdm"),
             Path("/usr/share/backgrounds"),
+            Path("/usr/share/themes"),
             Path("/usr/share/vim/vimfiles/ftdetect"),
             Path("/usr/share/vim/vimfiles/syntax"),
             self.xdg_conf_dir() / "alacritty",
