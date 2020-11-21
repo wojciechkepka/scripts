@@ -219,8 +219,16 @@ class Setup(object):
         ).safe_run()
         system.gitclone(f"{REPO_BASE}/gruvbox-gtk", self.theme_dir() / "gruvbox-gtk")
         system.gitclone(f"{REPO_BASE}/Aritim-Dark", self.theme_dir() / "aritim")
-        Command("mv", [str(self.theme_dir() / "aritim/GTK"), str(self.theme_dir() / "Aritim-Dark")]).safe_run()
-        shutil.rmtree(str(self.theme_dir() / "aritim"))
+        system.gitclone("https://github.com/Dracula/gtk", self.theme_dir() / "Dracula")
+
+        try:
+            Command("mv", [str(self.theme_dir() / "aritim/GTK"), str(self.theme_dir() / "Aritim-Dark")]).safe_run()
+        finally:
+            shutil.rmtree(str(self.theme_dir() / "aritim"))
+
+        system.cp(self.theme_dir() / "Dracula", Path("/usr/share/backgrounds/Dracula"))
+        system.cp(self.theme_dir() / "gruvbox-gtk", Path("/usr/share/backgrounds/gruvbox-gtk"))
+        system.cp(self.theme_dir() / "Aritim-Dark", Path("/usr/share/backgrounds/Aritim-Dark"))
 
     def install_configs(self):
         conf_dirs = [
