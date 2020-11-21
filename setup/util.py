@@ -50,7 +50,9 @@ def bash(cmd: str, quit=False):
 def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
     """Asks user for y/n choice on msg. If the answer is yes calls function f with *args"""
     sys.stdout.write(
-        str(Color.BWHITE) + msg + f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: "
+        str(Color.BWHITE)
+        + msg
+        + f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: "
     )
     sys.stdout.flush()
     if ask:
@@ -69,8 +71,6 @@ def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
     else:
         sys.stdout.write(str(Color.CYAN) + "y\n" + str(Color.NC))
         f(*args)
-
-
 
 
 def getch():
@@ -110,6 +110,7 @@ class Color(Enum):
 
     def __str__(self):
         return self.value
+
 
 class Command(object):
     """Command is a wrapper for running commands in a subprocess providing some utility
@@ -214,7 +215,6 @@ class Command(object):
             if self.display:
                 sys.stderr.write(f"{Color.BWHITE}Failed running command{Color.NC} `{self}` - {Color.RED}{e}{Color.NC}")
 
-
             if reraise:
                 raise
 
@@ -249,4 +249,6 @@ def run_steps(steps: List[Step], ask=True):
             step.run(ask=ask)
         except Exception as e:
             s = f"{Color.LBLUE}{step[0]}({' '.join(step[1:])}){Color.NC}"
-            sys.stderr.write(f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` -\n{Color.RED}{traceback.format_exc()}{Color.NC}")
+            sys.stderr.write(
+                f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` -\n{Color.RED}{traceback.format_exc()}{Color.NC}"
+            )
