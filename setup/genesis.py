@@ -377,6 +377,11 @@ class Setup(object):
     def mkinitram(self):
         Command("mkinitcpio", ["-P"]).safe_run()
 
+    def enable_services(self):
+        services = ["sshd", "lightdm", "dhcpcd"]
+        for service in services:
+            system.systemctl_enable(service)
+
     def setup(self):
         run_steps(
             [
@@ -395,6 +400,7 @@ class Setup(object):
                 Step("Install coc extensions?", self.install_coc_extensions),
                 Step("Install GRUB?", self.install_grub),
                 Step("Run mkinitcpio?", self.mkinitram),
+                Step("Enable systemd services?", self.enable_services),
             ],
             ask=self.ask,
         )
