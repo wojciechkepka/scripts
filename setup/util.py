@@ -148,17 +148,23 @@ class Command(object):
             sys.stdout.write(str(Color.GREEN))
         self.stdout = ""
         for c in iter(lambda: process.stdout.read(1), b""):
-            ch = c.decode("utf-8")
-            self.stdout += ch
-            sys.stdout.write(ch)
+            try:
+                ch = c.decode("utf-8")
+                self.stdout += ch
+                sys.stdout.write(ch)
+            except:
+                pass
 
         if self.display:
             sys.stderr.write(str(Color.RED))
         self.stder = ""
         for c in iter(lambda: process.stderr.read(1), b""):
-            ch = c.decode("utf-8")
-            self.stderr += ch
-            sys.stderr.write(ch)
+            try:
+                ch = c.decode("utf-8")
+                self.stderr += ch
+                sys.stderr.write(ch)
+            except:
+                pass
 
         if self.display:
             sys.stdout.write(str(Color.NC))
