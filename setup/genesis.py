@@ -364,7 +364,7 @@ class Setup(object):
             Command(
                 "grub-install", ["--target=x86_64-efi", f"--efi-directory={location}", "--bootloader-id=GRUB"]
             ).safe_run()
-            Command("grub-mkconfig", ["-o", "{location}/grub/grub.cfg"]).safe_run()
+            Command("grub-mkconfig", ["-o", f"{location}/grub/grub.cfg"]).safe_run()
 
     def mkinitram(self):
         Command("mkinitcpio", ["-P"]).safe_run()
