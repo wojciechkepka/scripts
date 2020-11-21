@@ -193,11 +193,10 @@ class Command(object):
         """Runs this command in a subprocess."""
         print(f"{Color.BWHITE}Running{Color.NC} `{self}`")
 
-        p = self._subprocess()
         if self.follow:
-            p._run_follow()
+            self._run_follow()
         else:
-            p._run()
+            self._run()
 
         if self.quit and self.exit_code != 0:
             sys.exit(self.exit_code)
@@ -215,10 +214,11 @@ class Command(object):
             if self.display:
                 sys.stderr.write(f"{Color.BWHITE}Failed running command{Color.NC} `{self}` - {Color.RED}{e}{Color.NC}")
 
+
             if reraise:
                 raise
 
-            if quit:
+            if self.quit:
                 sys.exit(1)
 
 
