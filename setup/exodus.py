@@ -60,7 +60,7 @@ def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
             inp_p.mkdir(parents=True)
             try:
                 Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)], opts=opts).safe_run()
-                bash(f"cd {str(inp_p)} && tar -zcvf {str(out_p)} ./*", quit=True)
+                bash(f"cd {str(inp_p)} && tar -I pigz -cvf {str(out_p)} ./*", quit=True)
             finally:
                 Command("umount", [f"/dev/{vg}/{snapshot}"], opts=opts).safe_run()
     finally:
