@@ -20,6 +20,7 @@ import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint, measure
+from typing import Any
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -119,6 +120,37 @@ class Exodus(object):
         (out, t) = measure(lvm_backup, vg, lv, self.args.out[0])
         _print_backup_result(vg, lv, out, t)
 
+    @staticmethod
+    def __backup_validate_conf(conf: Any):
+        if not isinstance(conf, dict):
+            eprint("Invalid configuration file - file is not a json map")
+            exit(1)
+
+        if not "devices" in conf.keys():
+            eprint("Invalid configuration file - missing `devices` field")
+            exit(1)
+        else:
+            if not isinstance(conf["devices"], list):
+                eprint("Invalid configuration file - `devices` field should be a list")
+                exit(1)
+
+            for device in conf["devices"]:
+                if not isinstance(device, dict):
+                    eprint("Invalid device in configuration - not a map")
+                    pass
+                if not "name" in device.keys():
+                    eprint("Invalid device in configuration - missing `name` field")
+                if not "vol-group" in device.keys():
+                    eprint("Invalid device in configuration - missing `vol-group` field")
+
+        if not "output_path" in conf.keys():
+            eprint(f"Invalid configuration file - missing `output_path` field")
+            exit(1)
+        else:
+            if not isinstance(conf["output_path"], str):
+                eprint(f"Invalid configuration file - `output_path` should be a string")
+                exit(1)
+
     def __backup(self):
         """Runs all backups specified in config file.
         Current format is a json file with multiple logical volumes in a list.
@@ -139,28 +171,11 @@ class Exodus(object):
         """
         with self.args.config[0].open("r") as f:
             conf = json.load(f)
+            self.__backup_validate_conf(conf)
             results = []
 
-            if not isinstance(conf, dict):
-                eprint("Invalid configuration file")
-                exit(1)
-
-            if not "devices" in conf.keys():
-                eprint("Invalid configuration file - missing devices list")
-                exit(1)
-
-            if not "output_path" in conf.keys():
-                eprint(f"Invalid configuration file - missing output_path field")
-                exit(1)
-
             for device in conf["devices"]:
-                if isinstance(device, dict):
-                    if not "name" in device.keys():
-                        pass
-                    if not "vol-group" in device.keys():
-                        pass
-
-                    results.append(measure(lvm_backup, device["vol-group"], device["name"], Path(conf["output_path"])))
+                results.append(measure(lvm_backup, device["vol-group"], device["name"], Path(conf["output_path"])))
 
             for ((out, t), device) in zip(results, conf["devices"]):
                 _print_backup_result(device["vol-group"], device["name"], out, t)
