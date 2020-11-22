@@ -39,7 +39,7 @@ def lvm_size(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> int:
 
 def lvm_snapshot(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> str:
     """Creates a snapshot of a given logical volume"""
-    size = lvm_size(vg, lv, opts=opts)
+    size = lvm_size(vg, lv, ExecOpts(quit=True))
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     name = f"{lv}_snapshot_{timestamp}"
     Command("lvcreate", ["-L", str(size) + "B", "-s", "-n", name, f"{vg}/{lv}"], opts=opts).safe_run()
@@ -55,7 +55,7 @@ def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
     """Creates a snapshot of a logical volume, mounts it in temporary directory
     creates an tar gzip archive in out_path and cleans up the snapshot afterwards.
     Returns a path to final archive containing backed up files."""
-    opts = ExecOpts(quit=True)
+    opts = ExecOpts(quit=True, collect=False)
     system.install_pkg_if_bin_not_exists("tar")
     system.install_pkg_if_bin_not_exists("pigz")
     try:

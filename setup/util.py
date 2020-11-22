@@ -143,21 +143,7 @@ class Color(Enum):
 
 
 class ExecOpts(object):
-    """Configuration specifying Command execution"""
-
-    def __init__(self, display: bool = True, quit: bool = False, redirect: bool = False, follow: bool = True):
-        self.display = display
-        self.quit = quit
-        self.redirect = redirect
-        self.follow = follow
-
-
-DEFAULT_OPTS = ExecOpts()
-
-
-class Command(object):
-    """Command is a wrapper for running commands in a subprocess providing some utility
-    parameters allowing adjustment of command execution.
+    """Configuration specifying Command execution
 
     Command parameters available:
         * display - whether to print stdout and/or stderr after cmd execution (defualt - True)
@@ -166,6 +152,30 @@ class Command(object):
         * redirect - replace subprocess's stdin, stdout, stderr with main processes fd's. (default - False)
         * follow - display commands output reading from subprocess stdout/stderr character
                    by character. (default - True)
+        * collect - if set to False stdout and stderr wont be collected (default - True)
+    """
+
+    def __init__(
+        self,
+        display: bool = True,
+        quit: bool = False,
+        redirect: bool = False,
+        follow: bool = True,
+        collect: bool = True,
+    ):
+        self.display = display
+        self.quit = quit
+        self.redirect = redirect
+        self.follow = follow
+        self.collect = collect
+
+
+DEFAULT_OPTS = ExecOpts()
+
+
+class Command(object):
+    """Command is a wrapper for running commands in a subprocess providing some utility
+    parameters allowing adjustment of command execution.
     """
 
     def __init__(self, cmd: str, args: List[str], opts: ExecOpts = DEFAULT_OPTS):
@@ -192,7 +202,8 @@ class Command(object):
             for c in iter(lambda: self.subprocess.stdout.read(1), b""):
                 try:
                     ch = c.decode("utf-8")
-                    self.stdout += ch
+                    if self.opts.collect:
+                        self.stdout += ch
                     outw(ch, flush=False)
                 except:
                     pass
@@ -209,7 +220,8 @@ class Command(object):
             for c in iter(lambda: self.subprocess.stderr.read(1), b""):
                 try:
                     ch = c.decode("utf-8")
-                    self.stderr += ch
+                    if self.opts.collect:
+                        self.stderr += ch
                     errw(ch, flush=False)
                 except:
                     pass
