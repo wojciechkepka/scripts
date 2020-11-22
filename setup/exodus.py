@@ -60,24 +60,39 @@ def lvm_backup(vg: str, lv: str, out_p: Path):
 
 
 ################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ classes ~~~~~~~~~~~|
+################################################################################
+
+
+class Exodus(object):
+    @staticmethod
+    def __parser() -> argparse.ArgumentParser:
+        parser = argparse.ArgumentParser(prog="exodus", description="Backup utility")
+        subparsers = parser.add_subparsers(dest="command", help="Command to run", required=True)
+
+        lvm_parser = subparsers.add_parser("lvm")
+        lvm_parser.add_argument(
+            "vg",
+            nargs=1,
+            type=str,
+            help="Name of volume group containing the logical volume to backup",
+        )
+        lvm_parser.add_argument("lv", nargs=1, type=str, help="Logical volume to backup")
+        lvm_parser.add_argument("out", nargs=1, type=Path, help="Output path where final archive will be stored")
+
+        return parser
+
+    def __init__(self):
+        self.args = self.__parser().parse_args()
+
+    def main(self):
+        if self.args.command == "lvm":
+            lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
+
+
+################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ main ~~~~~~~~~~~~~~|
 ################################################################################
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="exodus", description="Backup utility")
-    subparsers = parser.add_subparsers(dest="command", help="Command to run", required=True)
-
-    lvm_parser = subparsers.add_parser("lvm")
-    lvm_parser.add_argument(
-        "vg",
-        nargs=1,
-        type=str,
-        help="Name of volume group containing the logical volume to backup",
-    )
-    lvm_parser.add_argument("lv", nargs=1, type=str, help="Logical volume to backup")
-    lvm_parser.add_argument("out", nargs=1, type=Path, help="Output path where final archive will be stored")
-
-    args = parser.parse_args()
-
-    if args.command == "lvm":
-        lvm_backup(args.vg[0], args.lv[0], args.out[0])
+    Exodus().main()
