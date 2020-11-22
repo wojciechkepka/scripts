@@ -23,17 +23,18 @@ from enum import Enum
 ################################################################################
 
 
-def _w(fd: IO, *items: Any):
+def _w(fd: IO, *items: Any, flush: bool = True):
     fd.write("".join([item.__str__() for item in items]))
-    fd.flush()
+    if flush:
+        fd.flush()
 
 
-def errw(*items: Any):
-    _w(sys.stderr, *items)
+def errw(*items: Any, flush: bool = True):
+    _w(sys.stderr, *items, flush=flush)
 
 
-def outw(*items: Any):
-    _w(sys.stdout, *items)
+def outw(*items: Any, flush: bool = True):
+    _w(sys.stdout, *items, flush=flush)
 
 
 def eprint(msg: str):
@@ -192,9 +193,10 @@ class Command(object):
                 try:
                     ch = c.decode("utf-8")
                     self.stdout += ch
-                    outw(ch)
+                    outw(ch, flush=False)
                 except:
                     pass
+            sys.stderr.flush()
         finally:
             if self.opts.display:
                 outw(Color.NC)
@@ -208,9 +210,10 @@ class Command(object):
                 try:
                     ch = c.decode("utf-8")
                     self.stderr += ch
-                    errw(ch)
+                    errw(ch, flush=False)
                 except:
                     pass
+            sys.stderr.flush()
         finally:
             if self.opts.display:
                 errw(Color.NC)
