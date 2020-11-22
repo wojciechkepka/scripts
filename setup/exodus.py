@@ -41,7 +41,7 @@ def lvm_snapshot(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> str:
     """Creates a snapshot of a given logical volume"""
     size = lvm_size(vg, lv, ExecOpts(quit=True))
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    name = f"{lv}_snapshot_{timestamp}"
+    name = f"{vg}-{lv}_snapshot_{timestamp}"
     Command("lvcreate", ["-L", str(size) + "B", "-s", "-n", name, f"{vg}/{lv}"], opts=opts).safe_run()
     return name
 
