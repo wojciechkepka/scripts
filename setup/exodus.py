@@ -11,9 +11,10 @@ module grouping functions related to operating with backups.
 import system
 import time
 import argparse
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command, bash, ExecOpts, DEFAULT_OPTS
+from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -91,7 +92,11 @@ class Exodus(object):
 
     def main(self):
         if self.args.command == "lvm":
-            lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
+            start = time.time()
+            out = lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
+            end = time.time()
+            outw(Color.BWHITE, "Finished backup in ", Color.LBLUE, start - end, "s", Color.NC, "\n")
+            outw(Color.BWHITE, "Final backup size ", Color.LBLUE, out.stat().st_size, "B", Color.NC, "\n")
 
 
 ################################################################################
