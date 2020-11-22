@@ -14,6 +14,7 @@ import argparse
 import time
 import traceback
 import sys
+import system
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint
@@ -51,6 +52,8 @@ def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
     creates an tar gzip archive in out_path and cleans up the snapshot afterwards.
     Returns a path to final archive containing backed up files."""
     opts = ExecOpts(quit=True)
+    system.install_pkg_if_bin_not_exists("tar")
+    system.install_pkg_if_bin_not_exists("pigz")
     try:
         snapshot = lvm_snapshot(vg, lv, opts=opts)
         out_p = out_p / (snapshot + ".tgz")
