@@ -10,6 +10,7 @@ module grouping functions related to operating with backups.
 
 import system
 import time
+import argparse
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from util import Command, bash
@@ -55,4 +56,28 @@ def lvm_backup(vg: str, lv: str, out_p: Path):
         bash(f"tar -zcvf {str(out_p / (snapshot + '.tgz'))} {str(inp_p / '*')}", quit=True)
         Command("umount", [str(inp_p)]).safe_run()
 
-    lvm_remove(vg, lv)
+    lvm_remove(vg, snapshot)
+
+
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ main ~~~~~~~~~~~~~~|
+################################################################################
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="exodus", description="Backup utility")
+    subparsers = parser.add_subparsers(dest="command", help="Command to run", required=True)
+
+    lvm_parser = subparsers.add_parser("lvm")
+    lvm_parser.add_argument(
+        "vg",
+        nargs=1,
+        type=str,
+        help="Name of volume group containing the logical volume to backup",
+    )
+    lvm_parser.add_argument("lv", nargs=1, type=str, help="Logical volume to backup")
+    lvm_parser.add_argument("out", nargs=1, type=Path, help="Output path where final archive will be stored")
+
+    args = parser.parse_args()
+
+    if args.command == "lvm":
+        lvm_backup(args.vg, args.lv, args.out)
