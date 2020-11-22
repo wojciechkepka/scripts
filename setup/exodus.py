@@ -80,4 +80,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.command == "lvm":
-        lvm_backup(args.vg, args.lv, args.out)
+        lvm_backup(args.vg[0], args.lv[0], args.out[0])
