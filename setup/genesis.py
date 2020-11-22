@@ -409,6 +409,7 @@ class Genesis(object):
     @staticmethod
     def __parser() -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(prog="genesis", description="Arch linux setup")
+        parser.add_argument("--no-color", dest="no_color", action="store_true")
         subparsers = parser.add_subparsers(title="command", dest="command", required=True)
 
         init_parser = subparsers.add_parser(
@@ -435,6 +436,8 @@ class Genesis(object):
 
     def __init__(self):
         args = Genesis.__parser().parse_args()
+        if args.no_color == True:
+            Color.disable()
         self.cmd = args.command
         self.cfg = SetupConfig.from_args(args)
 
