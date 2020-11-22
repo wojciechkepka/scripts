@@ -13,6 +13,7 @@ import subprocess
 import termios
 import tty
 import traceback
+import time
 from typing import List, Callable, Any, Optional, IO
 from pathlib import Path
 from enum import Enum
@@ -110,6 +111,14 @@ def conv_b(_bytes: int) -> str:
         return f"{_bytes / (1000. * 1000 * 1000):.2f} GB"
     else:
         return f"{_bytes / (1000. * 1000 * 1000 * 1000):.2f} TB"
+
+
+def measure(func: Callable, *args: Any, **kwargs: Any) -> (Any, float):
+    start = time.time()
+    ret = func(*args, **kwargs)
+    end = time.time()
+
+    return (ret, end - start)
 
 
 ################################################################################
