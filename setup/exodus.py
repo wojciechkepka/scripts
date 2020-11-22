@@ -51,7 +51,7 @@ def lvm_remove(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS):
     Command("lvremove", ["-y", f"{vg}/{lv}"], opts=opts).safe_run()
 
 
-def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
+def lvm_backup(vg: str, lv: str, out_p: Path, verbose: bool = True) -> Path:
     """Creates a snapshot of a logical volume, mounts it in temporary directory
     creates an tar gzip archive in out_path and cleans up the snapshot afterwards.
     Returns a path to final archive containing backed up files."""
@@ -67,7 +67,8 @@ def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
             inp_p.mkdir(parents=True)
             try:
                 Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)], opts=opts).safe_run()
-                bash(f"cd {str(inp_p)} && tar -I pigz -cvf {str(out_p)} ./*", quit=True)
+                flags = "-cvf" if verbose else "-cf"
+                bash(f"cd {str(inp_p)} && tar -I pigz {flags} {str(out_p)} ./*", quit=True)
             finally:
                 Command("umount", [f"/dev/{vg}/{snapshot}"], opts=opts).safe_run()
     finally:
@@ -105,9 +106,11 @@ class Exodus(object):
         )
         lvm_parser.add_argument("lv", nargs=1, type=str, help="Logical volume to backup")
         lvm_parser.add_argument("out", nargs=1, type=Path, help="Output path where final archive will be stored")
+        lvm_parser.add_argument("--verbose", dest="verbose", action="store_true")
 
         backup_parser = subparsers.add_parser("backup")
         backup_parser.add_argument("config", nargs=1, type=Path, help="Location of config file")
+        backup_parser.add_argument("--verbose", dest="verbose", action="store_true")
 
         return parser
 
@@ -117,7 +120,7 @@ class Exodus(object):
     def __lvm(self):
         vg = self.args.vg[0]
         lv = self.args.lv[0]
-        (out, t) = measure(lvm_backup, vg, lv, self.args.out[0])
+        (out, t) = measure(lvm_backup, vg, lv, self.args.out[0], verbose=self.args.verbose)
         _print_backup_result(vg, lv, out, t)
 
     @staticmethod
@@ -175,7 +178,15 @@ class Exodus(object):
             results = []
 
             for device in conf["devices"]:
-                results.append(measure(lvm_backup, device["vol-group"], device["name"], Path(conf["output_path"])))
+                results.append(
+                    measure(
+                        lvm_backup,
+                        device["vol-group"],
+                        device["name"],
+                        Path(conf["output_path"]),
+                        verbose=self.args.verbose,
+                    )
+                )
 
             for ((out, t), device) in zip(results, conf["devices"]):
                 _print_backup_result(device["vol-group"], device["name"], out, t)
