@@ -116,7 +116,7 @@ class Exodus(object):
             sys.exit(0)
         except Exception:
             eprint(f"{Color.BWHITE}Unhandled exception{Color.NC}\n")
-            eprint(f"{Color.RED}{traceback.format_exc()}{Color.NC}")
+            eprint(f"{traceback.format_exc()}")
             sys.exit(1)
 
 
