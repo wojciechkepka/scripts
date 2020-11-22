@@ -43,20 +43,24 @@ def lvm_remove(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS):
     Command("lvremove", ["-y", "-v", f"{vg}/{lv}"], opts=opts).safe_run()
 
 
-def lvm_backup(vg: str, lv: str, out_p: Path):
+def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
     """Creates a snapshot of a logical volume, mounts it in temporary directory
-    creates an tar gzip archive in out_path and cleans up the snapshot afterwards."""
+    creates an tar gzip archive in out_path and cleans up the snapshot afterwards.
+    Returns a path to final archive containing backed up files."""
     opts = ExecOpts(quit=True)
     snapshot = lvm_snapshot(vg, lv, opts=opts)
+    out_p = out_p / (snapshot + ".tgz")
 
     with TemporaryDirectory() as tempdir:
         inp_p = Path(tempdir) / snapshot
         inp_p.mkdir(parents=True)
         Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)], opts=opts).safe_run()
-        bash(f"cd {str(inp_p)} && tar -zcvf {str(out_p / (snapshot + '.tgz'))} ./*", quit=True)
+        bash(f"cd {str(inp_p)} && tar -zcvf {str(out_p)} ./*", quit=True)
         Command("umount", [str(inp_p)], opts=opts).safe_run()
 
     lvm_remove(vg, snapshot)
+
+    return out_p
 
 
 ################################################################################
