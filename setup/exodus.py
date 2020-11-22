@@ -14,7 +14,7 @@ import argparse
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw
+from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -41,7 +41,7 @@ def lvm_snapshot(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> str:
 
 def lvm_remove(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS):
     """Removes a logical volume"""
-    Command("lvremove", ["-y", "-v", f"{vg}/{lv}"], opts=opts).safe_run()
+    Command("lvremove", ["-y", f"{vg}/{lv}"], opts=opts).safe_run()
 
 
 def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
@@ -95,8 +95,8 @@ class Exodus(object):
             start = time.time()
             out = lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
             end = time.time()
-            outw(Color.BWHITE, "Finished backup in ", Color.LBLUE, start - end, "s", Color.NC, "\n")
-            outw(Color.BWHITE, "Final backup size ", Color.LBLUE, out.stat().st_size, "B", Color.NC, "\n")
+            outw(Color.BWHITE, "Finished backup in ", Color.YELLOW, f"{end - start:.2f}", "s", Color.NC, "\n")
+            outw(Color.BWHITE, "Final backup size ", Color.YELLOW, conv_b(out.stat().st_size), Color.NC, "\n")
 
 
 ################################################################################
