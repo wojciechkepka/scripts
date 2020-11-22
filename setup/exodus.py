@@ -96,6 +96,8 @@ class Exodus(object):
     def __parser() -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(prog="exodus", description="Backup utility")
         subparsers = parser.add_subparsers(dest="command", help="Command to run", required=True)
+        parser.add_argument("--verbose", dest="verbose", action="store_true")
+        parser.add_argument("--no-color", dest="no_color", action="store_true")
 
         lvm_parser = subparsers.add_parser("lvm")
         lvm_parser.add_argument(
@@ -106,13 +108,9 @@ class Exodus(object):
         )
         lvm_parser.add_argument("lv", nargs=1, type=str, help="Logical volume to backup")
         lvm_parser.add_argument("out", nargs=1, type=Path, help="Output path where final archive will be stored")
-        lvm_parser.add_argument("--verbose", dest="verbose", action="store_true")
-        lvm_parser.add_argument("--no-color", dest="no_color", action="store_true")
 
         backup_parser = subparsers.add_parser("backup")
         backup_parser.add_argument("config", nargs=1, type=Path, help="Location of config file")
-        backup_parser.add_argument("--verbose", dest="verbose", action="store_true")
-        backup_parser.add_argument("--no-color", dest="no_color", action="store_true")
 
         return parser
 
