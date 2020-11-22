@@ -263,7 +263,7 @@ def run_steps(steps: List[Step], ask=True):
         try:
             step.run(ask=ask)
         except Exception:
-            s = f"{Color.LBLUE}{step[0]}({' '.join(step[1:])}){Color.NC}"
+            s = f"{Color.LBLUE}{step.func}({' '.join(step.args[1:])}){Color.NC}"
             errw(
                 f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` -\n{Color.RED}{traceback.format_exc()}{Color.NC}"
             )
