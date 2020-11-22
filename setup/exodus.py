@@ -15,6 +15,7 @@ import time
 import traceback
 import sys
 import system
+import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint
@@ -37,7 +38,8 @@ def lvm_size(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> int:
 def lvm_snapshot(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> str:
     """Creates a snapshot of a given logical volume"""
     size = lvm_size(vg, lv, opts=opts)
-    name = f"{lv}_snapshot_{int(time.time())}"
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    name = f"{lv}_snapshot_{timestamp}"
     Command("lvcreate", ["-L", str(size) + "B", "-s", "-n", name, f"{vg}/{lv}"], opts=opts).safe_run()
     return name
 
