@@ -15,10 +15,11 @@ import time
 import traceback
 import sys
 import system
+import json
 import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint
+from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint, measure
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -75,6 +76,14 @@ def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
     return out_p
 
 
+def _print_backup_result(vg: str, lv: str, outfile: Path, time: float):
+    outw("~" * 50, "\n")
+    outw(Color.RED, f"{vg}/{lv}", Color.NC, "\n")
+    outw("\t", Color.BWHITE, "Finished backup in: ", Color.YELLOW, f"{time:.2f}", "s", Color.NC, "\n")
+    outw("\t", Color.BWHITE, "Final backup size: ", Color.YELLOW, conv_b(outfile.stat().st_size), Color.NC, "\n")
+    outw("\t", Color.BWHITE, "Output file: ", Color.YELLOW, outfile, Color.NC, "\n")
+
+
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ classes ~~~~~~~~~~~|
 ################################################################################
@@ -96,21 +105,72 @@ class Exodus(object):
         lvm_parser.add_argument("lv", nargs=1, type=str, help="Logical volume to backup")
         lvm_parser.add_argument("out", nargs=1, type=Path, help="Output path where final archive will be stored")
 
+        backup_parser = subparsers.add_parser("backup")
+        backup_parser.add_argument("config", nargs=1, type=Path, help="Location of config file")
+
         return parser
 
     def __init__(self):
         self.args = self.__parser().parse_args()
 
+    def __lvm(self):
+        vg = self.args.vg[0]
+        lv = self.args.lv[0]
+        (out, t) = measure(lvm_backup, vg, lv, self.args.out[0])
+        _print_backup_result(vg, lv, out, t)
+
+    def __backup(self):
+        """Runs all backups specified in config file.
+        Current format is a json file with multiple logical volumes in a list.
+        For example:
+        {
+            "output_path": "/mnt/backup",
+            "devices":  [
+                    {
+                        "name": "root",
+                        "vol-group": "vgsystem"
+                    },
+                    {
+                        "name": "home",
+                        "vol-group": "vghome"
+                    }
+            ]
+        }
+        """
+        with self.args.config[0].open("r") as f:
+            conf = json.load(f)
+            results = []
+
+            if not isinstance(conf, dict):
+                eprint("Invalid configuration file")
+                exit(1)
+
+            if not "devices" in conf.keys():
+                eprint("Invalid configuration file - missing devices list")
+                exit(1)
+
+            if not "output_path" in conf.keys():
+                eprint(f"Invalid configuration file - missing output_path field")
+                exit(1)
+
+            for device in conf["devices"]:
+                if isinstance(device, dict):
+                    if not "name" in device.keys():
+                        pass
+                    if not "vol-group" in device.keys():
+                        pass
+
+                    results.append(measure(lvm_backup, device["vol-group"], device["name"], Path(conf["output_path"])))
+
+            for ((out, t), device) in zip(results, conf["devices"]):
+                _print_backup_result(device["vol-group"], device["name"], out, t)
+
     def main(self):
         try:
             if self.args.command == "lvm":
-                start = time.time()
-                out = lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
-                end = time.time()
-                outw("~" * 50, "\n")
-                outw(Color.BWHITE, "Finished backup in: ", Color.YELLOW, f"{end - start:.2f}", "s", Color.NC, "\n")
-                outw(Color.BWHITE, "Final backup size: ", Color.YELLOW, conv_b(out.stat().st_size), Color.NC, "\n")
-                outw(Color.BWHITE, "Output file: ", Color.YELLOW, out, Color.NC)
+                self.__lvm()
+            elif self.args.command == "backup":
+                self.__backup()
         except KeyboardInterrupt:
             print(f"\n{Color.BWHITE}Exiting...{Color.NC}")
             sys.exit(0)
