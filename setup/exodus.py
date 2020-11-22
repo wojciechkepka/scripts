@@ -103,8 +103,8 @@ class Exodus(object):
                 out = lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
                 end = time.time()
                 outw("~" * 50, "\n")
-                outw(Color.BWHITE, "Finished backup in ", Color.YELLOW, f"{end - start:.2f}", "s", Color.NC, "\n")
-                outw(Color.BWHITE, "Final backup size ", Color.YELLOW, conv_b(out.stat().st_size), Color.NC, "\n")
+                outw(Color.BWHITE, "Finished backup in: ", Color.YELLOW, f"{end - start:.2f}", "s", Color.NC, "\n")
+                outw(Color.BWHITE, "Final backup size: ", Color.YELLOW, conv_b(out.stat().st_size), Color.NC, "\n")
                 outw(Color.BWHITE, "Output file: ", Color.YELLOW, out, Color.NC)
         except KeyboardInterrupt:
             print(f"\n{Color.BWHITE}Exiting...{Color.NC}")
