@@ -13,16 +13,16 @@ import time
 import argparse
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command, bash
+from util import Command, bash, ExecOpts, DEFAULT_OPTS
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
 ################################################################################
 
 
-def lvm_size(vg: str, lv: str) -> int:
+def lvm_size(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> int:
     """Returns size in bytes of a given logical volume"""
-    cmd = Command("lvs", [f"{vg}/{lv}", "-o", "LV_SIZE", "--noheadings", "--units", "B", "--nosuffix"])
+    cmd = Command("lvs", [f"{vg}/{lv}", "-o", "LV_SIZE", "--noheadings", "--units", "B", "--nosuffix"], opts=opts)
     cmd.safe_run()
     if cmd.exit_code == 0 and cmd.stdout:
         return int(cmd.stdout.strip())
@@ -30,31 +30,32 @@ def lvm_size(vg: str, lv: str) -> int:
     return 0
 
 
-def lvm_snapshot(vg: str, lv: str) -> str:
+def lvm_snapshot(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS) -> str:
     """Creates a snapshot of a given logical volume"""
-    size = lvm_size(vg, lv)
+    size = lvm_size(vg, lv, opts=opts)
     name = f"{lv}_snapshot_{int(time.time())}"
-    Command("lvcreate", ["-L", str(size) + "B", "-s", "-n", name, f"{vg}/{lv}"]).safe_run()
+    Command("lvcreate", ["-L", str(size) + "B", "-s", "-n", name, f"{vg}/{lv}"], opts=opts).safe_run()
     return name
 
 
-def lvm_remove(vg: str, lv: str):
+def lvm_remove(vg: str, lv: str, opts: ExecOpts = DEFAULT_OPTS):
     """Removes a logical volume"""
-    Command("lvremove", ["-y", "-v", f"{vg}/{lv}"]).safe_run()
+    Command("lvremove", ["-y", "-v", f"{vg}/{lv}"], opts=opts).safe_run()
 
 
 def lvm_backup(vg: str, lv: str, out_p: Path):
     """Creates a snapshot of a logical volume, mounts it in temporary directory
     creates an tar gzip archive in out_path and cleans up the snapshot afterwards."""
-    snapshot = lvm_snapshot(vg, lv)
+    opts = ExecOpts(quit=True)
+    snapshot = lvm_snapshot(vg, lv, opts=opts)
 
     with TemporaryDirectory() as tempdir:
         inp_p = Path(tempdir) / snapshot
         inp_p.mkdir(parents=True)
-        Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)]).safe_run()
-        Command("tar", ["-z", "-c", "-v", "-f", str(out_p / snapshot + ".tgz"), str(inp_p / "*")]).safe_run()
+        Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)], opts=opts).safe_run()
+        Command("tar", ["-z", "-c", "-v", "-f", str(out_p / snapshot + ".tgz"), str(inp_p / "*")], opts=opts).safe_run()
         bash(f"tar -zcvf {str(out_p / (snapshot + '.tgz'))} {str(inp_p / '*')}", quit=True)
-        Command("umount", [str(inp_p)]).safe_run()
+        Command("umount", [str(inp_p)], opts=opts).safe_run()
 
     lvm_remove(vg, snapshot)
 
