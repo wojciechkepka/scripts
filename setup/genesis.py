@@ -406,13 +406,8 @@ class Setup(object):
 
 
 class Genesis(object):
-    def __init__(self):
-        args = Genesis.parser().parse_args()
-        self.cmd = args.command
-        self.cfg = SetupConfig.from_args(args)
-
     @staticmethod
-    def parser() -> argparse.ArgumentParser:
+    def __parser() -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser(prog="genesis", description="Arch linux setup")
         subparsers = parser.add_subparsers(title="command", dest="command", required=True)
 
@@ -437,6 +432,11 @@ class Genesis(object):
         auto_parser.add_argument("--hostname", dest="hostname", help="Hostname of this system", required=True)
 
         return parser
+
+    def __init__(self):
+        args = Genesis.__parser().parse_args()
+        self.cmd = args.command
+        self.cfg = SetupConfig.from_args(args)
 
     def main(self):
         try:
