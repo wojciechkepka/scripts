@@ -12,7 +12,7 @@ import shutil
 import os
 from tempfile import TemporaryDirectory
 from typing import List
-from util import Command, fwrite, bash
+from util import Command, fwrite, bash, ExecOpts
 from pathlib import Path
 
 ################################################################################
@@ -91,11 +91,11 @@ def create_user(user: str, password=""):
     Command(
         "useradd",
         args + [user],
-        quit=True,
+        opts=ExecOpts(quit=True),
     ).safe_run()
 
     if not password:
-        Command("passwd", [user], redirect=True, follow=False).safe_run()
+        Command("passwd", [user], opts=ExecOpts(redirect=True, follow=False)).safe_run()
 
 
 def bins_exist(bins: List[str]):

@@ -18,7 +18,7 @@ import urllib.request
 import system
 from pathlib import Path
 from typing import List, Dict
-from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step, errw
+from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step, errw, ExecOpts
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~|
@@ -114,15 +114,13 @@ class Init(object):
         )
 
     def pacstrap(self, pkgs: List[str]):
-        Command("/usr/bin/pacstrap", [self.location] + pkgs, quit=True).safe_run(reraise=False)
+        Command("/usr/bin/pacstrap", [self.location] + pkgs, opts=ExecOpts(quit=quit)).safe_run(reraise=False)
 
     def arch_chroot(self, cmd: str):
         Command(
             "/usr/bin/arch-chroot",
             [self.location, "/bin/bash", "-c", cmd],
-            quit=True,
-            redirect=True,
-            follow=False,
+            opts=ExecOpts(quit=True, redirect=True, follow=False),
         ).safe_run(reraise=False)
 
     def archive_scripts(self):

@@ -17,7 +17,6 @@ from typing import List, Callable, Any, Optional, IO
 from pathlib import Path
 from enum import Enum
 
-
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
 ################################################################################
@@ -57,7 +56,7 @@ def inp_or_default(msg: str, default: str) -> str:
 
 def bash(cmd: str, quit=False):
     """Executes a bash script as a subprocess"""
-    Command("/bin/bash", ["-c", cmd], quit=quit).run()
+    Command("/bin/bash", ["-c", cmd], opts=ExecOpts(quit=quit)).run()
 
 
 def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
@@ -120,6 +119,19 @@ class Color(Enum):
         return self.value
 
 
+class ExecOpts(object):
+    """Configuration specifying Command execution"""
+
+    def __init__(self, display: bool = True, quit: bool = False, redirect: bool = False, follow: bool = True):
+        self.display = display
+        self.quit = quit
+        self.redirect = redirect
+        self.follow = follow
+
+
+DEFAULT_OPTS = ExecOpts()
+
+
 class Command(object):
     """Command is a wrapper for running commands in a subprocess providing some utility
     parameters allowing adjustment of command execution.
@@ -133,13 +145,10 @@ class Command(object):
                    by character. (default - True)
     """
 
-    def __init__(self, cmd: str, args: List[str], display=True, quit=False, redirect=False, follow=True):
+    def __init__(self, cmd: str, args: List[str], opts: ExecOpts = DEFAULT_OPTS):
         self.cmd = cmd
         self.args = args
-        self.display = display
-        self.quit = quit
-        self.redirect = redirect
-        self.follow = follow
+        self.opts = opts
 
         self.subprocess = None
         self.exit_code = None
@@ -147,14 +156,14 @@ class Command(object):
         self.stderr = None
 
     def _subprocess(self) -> subprocess.Popen:
-        if not self.redirect:
+        if not self.opts.redirect:
             return subprocess.Popen([self.cmd] + self.args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
             return subprocess.Popen([self.cmd] + self.args, stdout=sys.stdout, stderr=sys.stderr)
 
     def _follow_stdout(self):
         try:
-            if self.display:
+            if self.opts.display:
                 outw(Color.GREEN)
             self.stdout = ""
             for c in iter(lambda: self.subprocess.stdout.read(1), b""):
@@ -165,12 +174,12 @@ class Command(object):
                 except:
                     pass
         finally:
-            if self.display:
+            if self.opts.display:
                 outw(Color.NC)
 
     def _follow_stderr(self):
         try:
-            if self.display:
+            if self.opts.display:
                 errw(Color.RED)
             self.stderr = ""
             for c in iter(lambda: self.subprocess.stderr.read(1), b""):
@@ -181,7 +190,7 @@ class Command(object):
                 except:
                     pass
         finally:
-            if self.display:
+            if self.opts.display:
                 errw(Color.NC)
 
     def _run_follow(self):
@@ -196,10 +205,10 @@ class Command(object):
         (self.stdout, self.stderr) = map(lambda x: x.decode("utf-8"), self.subprocess.communicate())
         self.exit_code = self.subprocess.returncode
         if self.exit_code != 0:
-            if self.display and self.stderr:
+            if self.opts.display and self.stderr:
                 eprint("ERROR: " + self.stderr)
         else:
-            if self.display and self.stdout:
+            if self.opts.display and self.stdout:
                 outw(Color.GREEN, self.stdout, Color.NC)
 
     def __repr__(self):
@@ -209,12 +218,12 @@ class Command(object):
         """Runs this command in a subprocess."""
         print(f"{Color.BWHITE}Running{Color.NC} `{self}`")
 
-        if self.follow:
+        if self.opts.follow:
             self._run_follow()
         else:
             self._run()
 
-        if self.quit and self.exit_code != 0:
+        if self.opts.quit and self.exit_code != 0:
             sys.exit(self.exit_code)
 
     def safe_run(self, reraise=True):
@@ -227,13 +236,13 @@ class Command(object):
         try:
             self.run()
         except Exception as e:
-            if self.display:
+            if self.opts.display:
                 errw(f"{Color.BWHITE}Failed running command{Color.NC} `{self}` - {Color.RED}{e}{Color.NC}")
 
             if reraise:
                 raise
 
-            if self.quit:
+            if self.opts.quit:
                 sys.exit(1)
 
 
