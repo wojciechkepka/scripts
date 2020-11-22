@@ -139,7 +139,6 @@ class Color(Enum):
     NC = "\033[0m"
 
     _enable = True
-    colors = [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]
 
     def __str__(self):
         if self._enable:
@@ -149,12 +148,12 @@ class Color(Enum):
 
     @staticmethod
     def disable():
-        for color in Color.colors:
+        for color in [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]:
             color._enable = False
 
     @staticmethod
     def enable():
-        for color in Color.colors:
+        for color in [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]:
             color._enable = True
 
 
