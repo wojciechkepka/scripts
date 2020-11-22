@@ -12,9 +12,11 @@ import system
 import time
 import argparse
 import time
+import traceback
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b
+from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -54,15 +56,16 @@ def lvm_backup(vg: str, lv: str, out_p: Path) -> Path:
         out_p = out_p / (snapshot + ".tgz")
 
         with TemporaryDirectory() as tempdir:
+            inp_p = Path(tempdir) / snapshot
+            inp_p.mkdir(parents=True)
             try:
-                inp_p = Path(tempdir) / snapshot
-                inp_p.mkdir(parents=True)
                 Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)], opts=opts).safe_run()
                 bash(f"cd {str(inp_p)} && tar -zcvf {str(out_p)} ./*", quit=True)
             finally:
                 Command("umount", [f"/dev/{vg}/{snapshot}"], opts=opts).safe_run()
     finally:
-        lvm_remove(vg, snapshot)
+        if "snapshot" in locals():
+            lvm_remove(vg, snapshot)
 
     return out_p
 
@@ -94,12 +97,22 @@ class Exodus(object):
         self.args = self.__parser().parse_args()
 
     def main(self):
-        if self.args.command == "lvm":
-            start = time.time()
-            out = lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
-            end = time.time()
-            outw(Color.BWHITE, "Finished backup in ", Color.YELLOW, f"{end - start:.2f}", "s", Color.NC, "\n")
-            outw(Color.BWHITE, "Final backup size ", Color.YELLOW, conv_b(out.stat().st_size), Color.NC, "\n")
+        try:
+            if self.args.command == "lvm":
+                start = time.time()
+                out = lvm_backup(self.args.vg[0], self.args.lv[0], self.args.out[0])
+                end = time.time()
+                outw("~" * 50, "\n")
+                outw(Color.BWHITE, "Finished backup in ", Color.YELLOW, f"{end - start:.2f}", "s", Color.NC, "\n")
+                outw(Color.BWHITE, "Final backup size ", Color.YELLOW, conv_b(out.stat().st_size), Color.NC, "\n")
+                outw(Color.BWHITE, "Output file: ", Color.YELLOW, out, Color.NC)
+        except KeyboardInterrupt:
+            print(f"\n{Color.BWHITE}Exiting...{Color.NC}")
+            sys.exit(0)
+        except Exception:
+            eprint(f"{Color.BWHITE}Unhandled exception{Color.NC}\n")
+            eprint(f"{Color.RED}{traceback.format_exc()}{Color.NC}")
+            sys.exit(1)
 
 
 ################################################################################
