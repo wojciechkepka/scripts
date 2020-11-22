@@ -53,8 +53,7 @@ def lvm_backup(vg: str, lv: str, out_p: Path):
         inp_p = Path(tempdir) / snapshot
         inp_p.mkdir(parents=True)
         Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)], opts=opts).safe_run()
-        Command("tar", ["-z", "-c", "-v", "-f", str(out_p / snapshot + ".tgz"), str(inp_p / "*")], opts=opts).safe_run()
-        bash(f"tar -zcvf {str(out_p / (snapshot + '.tgz'))} {str(inp_p / '*')}", quit=True)
+        bash(f"cd {str(inp_p)} && tar -zcvf {str(out_p / (snapshot + '.tgz'))} ./*", quit=True)
         Command("umount", [str(inp_p)], opts=opts).safe_run()
 
     lvm_remove(vg, snapshot)
