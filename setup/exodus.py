@@ -107,10 +107,12 @@ class Exodus(object):
         lvm_parser.add_argument("lv", nargs=1, type=str, help="Logical volume to backup")
         lvm_parser.add_argument("out", nargs=1, type=Path, help="Output path where final archive will be stored")
         lvm_parser.add_argument("--verbose", dest="verbose", action="store_true")
+        lvm_parser.add_argument("--no-color", dest="no_color", action="store_true")
 
         backup_parser = subparsers.add_parser("backup")
         backup_parser.add_argument("config", nargs=1, type=Path, help="Location of config file")
         backup_parser.add_argument("--verbose", dest="verbose", action="store_true")
+        backup_parser.add_argument("--no-color", dest="no_color", action="store_true")
 
         return parser
 
@@ -193,6 +195,9 @@ class Exodus(object):
 
     def main(self):
         try:
+            if self.args.no_color == True:
+                Color.disable()
+
             if self.args.command == "lvm":
                 self.__lvm()
             elif self.args.command == "backup":

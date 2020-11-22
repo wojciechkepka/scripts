@@ -138,8 +138,24 @@ class Color(Enum):
     BWHITE = "\033[1;37m"
     NC = "\033[0m"
 
+    _enable = True
+    colors = [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]
+
     def __str__(self):
-        return self.value
+        if self._enable:
+            return self.value
+
+        return ""
+
+    @staticmethod
+    def disable():
+        for color in Color.colors:
+            color._enable = False
+
+    @staticmethod
+    def enable():
+        for color in Color.colors:
+            color._enable = True
 
 
 class ExecOpts(object):
