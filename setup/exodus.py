@@ -1,8 +1,8 @@
 #!/bin/env python
 """
-backup
+exodus
 
-module grouping functions related to operating with backups.
+CLI utility to create and manage backups.
 """
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ imports ~~~~~~~~~~~|
