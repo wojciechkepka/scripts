@@ -12,7 +12,7 @@ import system
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command
+from util import Command, bash
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -42,16 +42,17 @@ def lvm_remove(vg: str, lv: str):
     Command("lvremove", ["-y", "-v", f"{vg}/{lv}"]).safe_run()
 
 
-def lvm_backup(vg: str, lv: str, out_path: str):
+def lvm_backup(vg: str, lv: str, out_p: Path):
     """Creates a snapshot of a logical volume, mounts it in temporary directory
     creates an tar gzip archive in out_path and cleans up the snapshot afterwards."""
     snapshot = lvm_snapshot(vg, lv)
 
     with TemporaryDirectory() as tempdir:
         inp_p = Path(tempdir) / snapshot
-        out_p = Path(out_path)
-        Command("mount", [f"/dev/{vg}/{lv}", str(inp_p)]).safe_run()
+        inp_p.mkdir(parents=True)
+        Command("mount", [f"/dev/{vg}/{snapshot}", str(inp_p)]).safe_run()
         Command("tar", ["-z", "-c", "-v", "-f", str(out_p / snapshot + ".tgz"), str(inp_p / "*")]).safe_run()
+        bash(f"tar -zcvf {str(out_p / (snapshot + '.tgz'))} {str(inp_p / '*')}", quit=True)
         Command("umount", [str(inp_p)]).safe_run()
 
     lvm_remove(vg, lv)
