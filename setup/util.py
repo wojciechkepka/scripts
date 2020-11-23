@@ -20,6 +20,16 @@ from enum import Enum
 
 
 ################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~|
+################################################################################
+
+KILO = 1000.0
+MEGA = KILO * KILO
+GIGA = MEGA * KILO
+TERA = GIGA * KILO
+
+
+################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ classes ~~~~~~~~~~~|
 ################################################################################
 
@@ -54,6 +64,9 @@ class Color(Enum):
             color._enable = True
 
 
+COLORS = [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]
+
+
 class ExecOpts(object):
     """Configuration specifying Command execution
 
@@ -80,6 +93,9 @@ class ExecOpts(object):
         self.redirect = redirect
         self.follow = follow
         self.collect = collect
+
+
+DEFAULT_OPTS = ExecOpts()
 
 
 class Command(object):
@@ -210,18 +226,6 @@ class Step(object):
         else:
             ask_user_yn(self.message, self.func, ask=ask)
 
-
-################################################################################
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~|
-################################################################################
-
-COLORS = [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]
-DEFAULT_OPTS = ExecOpts()
-
-KILO = 1000.0
-MEGA = KILO * KILO
-GIGA = MEGA * KILO
-TERA = GIGA * KILO
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
