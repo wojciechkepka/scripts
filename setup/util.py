@@ -101,17 +101,23 @@ def fwrite(p: Path, s: str):
         f.write(s)
 
 
+KILO = 1000.0
+MEGA = KILO * KILO
+GIGA = MEGA * KILO
+TERA = GIGA * KILO
+
+
 def conv_b(_bytes: int) -> str:
-    if _bytes <= 1000:
-        return f"{_bytes / 1000.:.2f} B"
-    elif 1000 < _bytes < pow(1000, 2):
-        return f"{_bytes / 1000.:.2f} KB"
-    elif pow(1000, 2) < _bytes < pow(1000, 3):
-        return f"{_bytes / (1000. * 1000):.2f} MB"
-    elif pow(1000, 3) < _bytes < pow(1000, 4):
-        return f"{_bytes / (1000. * 1000 * 1000):.2f} GB"
+    if _bytes <= KILO:
+        return f"{_bytes:.2f} B"
+    elif KILO < _bytes <= MEGA:
+        return f"{_bytes / KILO:.2f} KB"
+    elif MEGA < _bytes <= GIGA:
+        return f"{_bytes / MEGA:.2f} MB"
+    elif GIGA < _bytes <= TERA:
+        return f"{_bytes / GIGA:.2f} GB"
     else:
-        return f"{_bytes / (1000. * 1000 * 1000 * 1000):.2f} TB"
+        return f"{_bytes / TERA:.2f} TB"
 
 
 def measure(func: Callable, *args: Any, **kwargs: Any) -> (Any, float):
