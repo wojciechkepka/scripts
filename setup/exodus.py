@@ -78,9 +78,9 @@ def lvm_backup(vg: str, lv: str, out_p: Path, verbose: bool = True) -> Path:
     return out_p
 
 
-def _print_backup_result(vg: str, lv: str, outfile: Path, time: float):
+def _print_backup_result(device: str, outfile: Path, time: float):
     outw("~" * 50, "\n")
-    outw(Color.RED, f"{vg}/{lv}", Color.NC, "\n")
+    outw(Color.RED, device, Color.NC, "\n")
     outw("\t", Color.BWHITE, "Finished backup in: ", Color.YELLOW, f"{time:.2f}", "s", Color.NC, "\n")
     outw("\t", Color.BWHITE, "Final backup size: ", Color.YELLOW, conv_b(outfile.stat().st_size), Color.NC, "\n")
     outw("\t", Color.BWHITE, "Output file: ", Color.YELLOW, outfile, Color.NC, "\n")
@@ -121,7 +121,7 @@ class Exodus(object):
         vg = self.args.vg[0]
         lv = self.args.lv[0]
         (out, t) = measure(lvm_backup, vg, lv, self.args.out[0], verbose=self.args.verbose)
-        _print_backup_result(vg, lv, out, t)
+        _print_backup_result(f"{vg}/{lv}", out, t)
 
     @staticmethod
     def __backup_validate_conf(conf: Any):
@@ -189,7 +189,7 @@ class Exodus(object):
                 )
 
             for ((out, t), device) in zip(results, conf["devices"]):
-                _print_backup_result(device["vol-group"], device["name"], out, t)
+                _print_backup_result(f"{device['vol-group']}/{device['name']}", out, t)
 
     def main(self):
         try:
