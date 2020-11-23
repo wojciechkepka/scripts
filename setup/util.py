@@ -18,115 +18,6 @@ from typing import List, Callable, Any, Optional, IO
 from pathlib import Path
 from enum import Enum
 
-################################################################################
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
-################################################################################
-
-
-def _w(fd: IO, *items: Any, flush: bool = True):
-    fd.write("".join([item.__str__() for item in items]))
-    if flush:
-        fd.flush()
-
-
-def errw(*items: Any, flush: bool = True):
-    _w(sys.stderr, *items, flush=flush)
-
-
-def outw(*items: Any, flush: bool = True):
-    _w(sys.stdout, *items, flush=flush)
-
-
-def eprint(msg: str):
-    """Prints a message to stderr in red color."""
-    errw(Color.RED, msg, Color.NC)
-
-
-def inp(msg: str) -> str:
-    """Takes input from user printing msg first."""
-    outw(Color.BWHITE, msg, Color.CYAN)
-    inp = input()
-    outw(Color.NC)
-    return inp
-
-
-def inp_or_default(msg: str, default: str) -> str:
-    """Asks user for input printing msg first. If users input is empty uses default as return"""
-    x = inp(msg + f"(default - '{Color.YELLOW}{default}{Color.NC}'): ")
-    return x if x else default
-
-
-def bash(cmd: str, quit=False):
-    """Executes a bash script as a subprocess"""
-    Command("/bin/bash", ["-c", cmd], opts=ExecOpts(quit=quit)).run()
-
-
-def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
-    """Asks user for y/n choice on msg. If the answer is yes calls function f with *args"""
-    outw(Color.BWHITE, msg, f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: ")
-    if ask:
-        while True:
-            ch = getch()
-            if ch == "y":
-                outw(Color.CYAN, ch, "\n", Color.NC)
-                f(*args)
-                break
-            elif ch == "n":
-                outw(Color.CYAN, ch, "\n", Color.NC)
-                break
-            elif ch == "q":
-                outw(Color.CYAN, ch, "\n", Color.NC)
-                raise KeyboardInterrupt
-    else:
-        outw(Color.CYAN, "y\n", Color.NC)
-        f(*args)
-
-
-def getch():
-    """Gets a raw character from terminal"""
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
-
-
-def fwrite(p: Path, s: str):
-    """Writes s to a file in path p"""
-    with open(p, "w") as f:
-        print(f"{Color.BWHITE}Writing{Color.NC} `{s}` to {Color.LBLUE}`{str(p)}`{Color.NC}")
-        f.write(s)
-
-
-KILO = 1000.0
-MEGA = KILO * KILO
-GIGA = MEGA * KILO
-TERA = GIGA * KILO
-
-
-def conv_b(_bytes: int) -> str:
-    if _bytes <= KILO:
-        return f"{_bytes:.2f} B"
-    elif KILO < _bytes <= MEGA:
-        return f"{_bytes / KILO:.2f} KB"
-    elif MEGA < _bytes <= GIGA:
-        return f"{_bytes / MEGA:.2f} MB"
-    elif GIGA < _bytes <= TERA:
-        return f"{_bytes / GIGA:.2f} GB"
-    else:
-        return f"{_bytes / TERA:.2f} TB"
-
-
-def measure(func: Callable, *args: Any, **kwargs: Any) -> (Any, float):
-    start = time.time()
-    ret = func(*args, **kwargs)
-    end = time.time()
-
-    return (ret, end - start)
-
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ classes ~~~~~~~~~~~|
@@ -154,12 +45,12 @@ class Color(Enum):
 
     @staticmethod
     def disable():
-        for color in [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]:
+        for color in COLORS:
             color._enable = False
 
     @staticmethod
     def enable():
-        for color in [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]:
+        for color in COLORS:
             color._enable = True
 
 
@@ -189,9 +80,6 @@ class ExecOpts(object):
         self.redirect = redirect
         self.follow = follow
         self.collect = collect
-
-
-DEFAULT_OPTS = ExecOpts()
 
 
 class Command(object):
@@ -321,6 +209,135 @@ class Step(object):
             ask_user_yn(self.message, self.func, *self.args, ask=ask)
         else:
             ask_user_yn(self.message, self.func, ask=ask)
+
+
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~|
+################################################################################
+
+COLORS = [Color.LBLUE, Color.CYAN, Color.GREEN, Color.YELLOW, Color.RED, Color.BWHITE, Color.NC]
+DEFAULT_OPTS = ExecOpts()
+
+KILO = 1000.0
+MEGA = KILO * KILO
+GIGA = MEGA * KILO
+TERA = GIGA * KILO
+
+################################################################################
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
+################################################################################
+
+
+def _w(fd: IO, *items: Any, flush: bool = True):
+    """Writes all items to specified file descriptor and flushes the fd if flush is set
+    to True."""
+    fd.write("".join([item.__str__() for item in items]))
+    if flush:
+        fd.flush()
+
+
+def errw(*items: Any, flush: bool = True):
+    """Writes out all items to stderr converting them to string. If flush is set to True
+    stderr will be flushed after the write."""
+    _w(sys.stderr, *items, flush=flush)
+
+
+def outw(*items: Any, flush: bool = True):
+    """Writes out all items to stdout converting them to string. If flush is set to True
+    stdout will be flushed after the write."""
+    _w(sys.stdout, *items, flush=flush)
+
+
+def eprint(msg: str):
+    """Prints a message to stderr in red color."""
+    errw(Color.RED, msg, Color.NC)
+
+
+def inp(msg: str) -> str:
+    """Takes input from user printing msg first."""
+    outw(Color.BWHITE, msg, Color.CYAN)
+    inp = input()
+    outw(Color.NC)
+    return inp
+
+
+def inp_or_default(msg: str, default: str) -> str:
+    """Asks user for input printing msg first. If users input is empty uses default as return."""
+    x = inp(msg + f"(default - '{Color.YELLOW}{default}{Color.NC}'): ")
+    return x if x else default
+
+
+def bash(cmd: str, quit=False):
+    """Executes a bash script as a subprocess."""
+    Command("/bin/bash", ["-c", cmd], opts=ExecOpts(quit=quit)).run()
+
+
+def ask_user_yn(msg: str, f: Callable, *args: Any, ask=True):
+    """Asks user for y/n choice on msg. If the answer is yes calls function f with *args."""
+    outw(Color.BWHITE, msg, f" {Color.GREEN}y(es){Color.NC}/{Color.RED}n(o){Color.NC}/{Color.YELLOW}q(uit){Color.NC}: ")
+    if ask:
+        while True:
+            ch = getch()
+            if ch == "y":
+                outw(Color.CYAN, ch, "\n", Color.NC)
+                f(*args)
+                break
+            elif ch == "n":
+                outw(Color.CYAN, ch, "\n", Color.NC)
+                break
+            elif ch == "q":
+                outw(Color.CYAN, ch, "\n", Color.NC)
+                raise KeyboardInterrupt
+    else:
+        outw(Color.CYAN, "y\n", Color.NC)
+        f(*args)
+
+
+def getch():
+    """Gets a raw character from stdin."""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
+
+def fwrite(p: Path, s: str):
+    """Writes s to a file in path p"""
+    with open(p, "w") as f:
+        print(f"{Color.BWHITE}Writing{Color.NC} `{s}` to {Color.LBLUE}`{str(p)}`{Color.NC}")
+        f.write(s)
+
+
+def conv_b(_bytes: int) -> str:
+    """Converts input _bytes to a display string showing scaled unit with two decimal places.
+    For example:
+        s = conv_b(1201)
+        assert s == "1.20 KB"
+    """
+    if _bytes <= KILO:
+        return f"{_bytes:.2f} B"
+    elif KILO < _bytes <= MEGA:
+        return f"{_bytes / KILO:.2f} KB"
+    elif MEGA < _bytes <= GIGA:
+        return f"{_bytes / MEGA:.2f} MB"
+    elif GIGA < _bytes <= TERA:
+        return f"{_bytes / GIGA:.2f} GB"
+    else:
+        return f"{_bytes / TERA:.2f} TB"
+
+
+def measure(func: Callable, *args: Any, **kwargs: Any) -> (Any, float):
+    """Measures execution time of func by calling it with *args and **kwargs.
+    Returns a tuple consisting of return value of function and execution time as float."""
+    start = time.time()
+    ret = func(*args, **kwargs)
+    end = time.time()
+
+    return (ret, end - start)
 
 
 def run_steps(steps: List[Step], ask=True):
