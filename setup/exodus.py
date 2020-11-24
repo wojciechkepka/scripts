@@ -19,7 +19,7 @@ import json
 import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint, measure
+from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint, measure, catch_errs
 from typing import Any
 
 ################################################################################
@@ -191,22 +191,17 @@ class Exodus(object):
             for ((out, t), device) in zip(results, conf["devices"]):
                 _print_backup_result(f"{device['vol-group']}/{device['name']}", out, t)
 
-    def main(self):
-        try:
-            if self.args.no_color == True:
-                Color.disable()
+    def _process_args(self):
+        if self.args.no_color == True:
+            Color.disable()
 
-            if self.args.command == "lvm":
-                self.__lvm()
-            elif self.args.command == "backup":
-                self.__backup()
-        except KeyboardInterrupt:
-            print(f"\n{Color.BWHITE}Exiting...{Color.NC}")
-            sys.exit(0)
-        except Exception:
-            eprint(f"{Color.BWHITE}Unhandled exception{Color.NC}\n")
-            eprint(f"{traceback.format_exc()}")
-            sys.exit(1)
+        if self.args.command == "lvm":
+            self.__lvm()
+        elif self.args.command == "backup":
+            self.__backup()
+
+    def main(self):
+        catch_errs(self._process_args())
 
 
 ################################################################################

@@ -18,7 +18,7 @@ import urllib.request
 import system
 from pathlib import Path
 from typing import List, Dict
-from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step, errw, ExecOpts
+from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step, errw, ExecOpts, catch_errs
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ config ~~~~~~~~~~~~|
@@ -441,19 +441,14 @@ class Genesis(object):
         self.cmd = args.command
         self.cfg = SetupConfig.from_args(args)
 
+    def _process_args(self):
+        if self.cmd == "init" or self.cmd == "auto":
+            Init(self.cfg).init()
+        elif self.cmd == "setup":
+            Setup(self.cfg).setup()
+
     def main(self):
-        try:
-            if self.cmd == "init" or self.cmd == "auto":
-                Init(self.cfg).init()
-            elif self.cmd == "setup":
-                Setup(self.cfg).setup()
-        except KeyboardInterrupt:
-            print(f"\n{Color.BWHITE}Exiting...{Color.NC}")
-            sys.exit(0)
-        except Exception:
-            eprint(f"{Color.BWHITE}Unhandled exception{Color.NC}\n")
-            eprint(f"{traceback.format_exc()}")
-            sys.exit(1)
+        catch_errs(self._process_args())
 
 
 ################################################################################
