@@ -17,7 +17,7 @@ from util import catch_errs
 ################################################################################
 
 
-class Tempalter(object):
+class TempalterCli(object):
     @staticmethod
     def __parser():
         parser = argparse.ArgumentParser("templater", description="CLI tool to manage themes and color schemes.")
@@ -48,4 +48,4 @@ class Tempalter(object):
 
 
 if __name__ == "__main__":
-    Tempalter().main()
+    TempalterCli().main()
