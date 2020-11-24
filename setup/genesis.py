@@ -450,7 +450,7 @@ class Genesis(object):
             Setup(self.cfg).setup()
 
     def main(self):
-        catch_errs(self._process_args())
+        catch_errs(self._process_args)
 
 
 ################################################################################

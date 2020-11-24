@@ -42,7 +42,7 @@ class TempalterCli(object):
             self.__set()
 
     def main(self):
-        catch_errs(self._process_args())
+        catch_errs(self._process_args)
 
 
 ################################################################################

@@ -203,7 +203,7 @@ class Exodus(object):
             self.__backup()
 
     def main(self):
-        catch_errs(self._process_args())
+        catch_errs(self._process_args)
 
 
 ################################################################################
