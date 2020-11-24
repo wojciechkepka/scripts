@@ -355,3 +355,17 @@ def run_steps(steps: List[Step], ask=True):
             errw(
                 f"{Color.BWHITE}Failed executing step{Color.NC} `{s}` -\n{Color.RED}{traceback.format_exc()}{Color.NC}"
             )
+
+
+def catch_errs(func: Callable, *args: Any, **kwargs: Any):
+    """Executes specified func with args and kwargs cathing KeyboardInterrupt and exiting with
+    return code 0 or catching unhandled exceptions and exiting with return code 1."""
+    try:
+        func(*args, **kwargs)
+    except KeyboardInterrupt:
+        print(f"\n{Color.BWHITE}Exiting...{Color.NC}")
+        sys.exit(0)
+    except Exception:
+        eprint(f"{Color.BWHITE}Unhandled exception{Color.NC}\n")
+        eprint(f"{traceback.format_exc()}")
+        sys.exit(1)
