@@ -27,6 +27,9 @@ class TextReader(object):
         else:
             return None
 
+    def is_last(self) -> bool:
+        return self.idx == (self.length - 1)
+
 
 class TokenType(Enum):
     NORMAL = 1
@@ -46,12 +49,6 @@ class Token(object):
             return self.text == other.text and self.type == other.type
         else:
             return False
-
-    def __repr__(self):
-        if self.type == TokenType.NORMAL:
-            return f"NORMAL - `{self.text}`"
-        else:
-            return f"VARIABLE - `{self.variable}` `{self.text}`"
 
 
 class Lexer(object):
@@ -103,13 +100,15 @@ class Lexer(object):
                         text = ""
                     tokens.append(token)
 
-                if self.reader.peek() == None:
+                # early exit because "}" is already parsed and if it breaks out
+                # it will get added as an extra token
+                if self.reader.is_last():
                     break
             else:
                 text += self.reader.current()
                 self.reader.next()
 
-            if self.reader.peek() == None:
+            if self.reader.is_last():
                 if self.reader.current() != None:
                     text += self.reader.current()
                 break
