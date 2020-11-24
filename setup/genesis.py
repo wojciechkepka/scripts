@@ -15,9 +15,11 @@ import traceback
 import json
 import shutil
 import urllib.request
-import system
 from pathlib import Path
 from typing import List, Dict
+
+sys.path.append("../")
+import system
 from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step, errw, ExecOpts, catch_errs
 
 ################################################################################

@@ -10,6 +10,9 @@ CLI tool to manage themes and configurations with multiple color schemes.
 
 import json
 import argparse
+import sys
+
+sys.path.append("../")
 from util import catch_errs
 
 ################################################################################

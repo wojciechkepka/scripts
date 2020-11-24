@@ -14,13 +14,15 @@ import argparse
 import time
 import traceback
 import sys
-import system
 import json
 import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint, measure, catch_errs
 from typing import Any
+
+sys.path.append("../")
+import system
+from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint, measure, catch_errs
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|

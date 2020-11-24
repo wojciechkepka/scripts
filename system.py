@@ -10,10 +10,11 @@ Functions providing easier api to interacting with linux
 
 import shutil
 import os
+import sys
 from tempfile import TemporaryDirectory
 from typing import List
-from util import Command, fwrite, bash, ExecOpts
 from pathlib import Path
+from util import Command, fwrite, bash, ExecOpts
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~|
