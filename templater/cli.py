@@ -103,33 +103,36 @@ class TempalterCli(object):
             sys.exit(1)
 
         with TemporaryDirectory() as tempdir:
-            for (inp_p, out_p) in self.config["files"].items():
-                p = Path(out_p)
+            try:
+                for (inp_p, out_p) in self.config["files"].items():
+                    p = Path(out_p)
 
-                if p.is_dir():
-                    eprint(f"Output path {Color.YELLOW}`{out_p}`{Color.RED} is a directory, skipping.\n")
-                    continue
+                    if p.is_dir():
+                        eprint(f"Output path {Color.YELLOW}`{out_p}`{Color.RED} is a directory, skipping.\n")
+                        continue
 
-                if p.exists():
-                    print(f"{Color.BWHITE}Backing up {Color.YELLOW}`{p}`{Color.BWHITE}, file already exists.{Color.NC}")
-                    Command(
-                        "cp", [out_p, str(Path(tempdir) / p.name)], opts=ExecOpts(follow=False, display=False)
-                    ).safe_run()
+                    if p.exists():
+                        print(
+                            f"{Color.BWHITE}Backing up {Color.YELLOW}`{p}`{Color.BWHITE}, file already exists.{Color.NC}"
+                        )
+                        Command(
+                            "cp", [out_p, str(Path(tempdir) / p.name)], opts=ExecOpts(follow=False, display=False)
+                        ).safe_run()
 
-                print(
-                    f"{Color.BWHITE}Rendering {Color.YELLOW}`{inp_p}`{Color.RED} ~~~~~> {Color.YELLOW}`{out_p}`{Color.NC}"
+                    print(
+                        f"{Color.BWHITE}Rendering {Color.YELLOW}`{inp_p}`{Color.RED} ~~~~~> {Color.YELLOW}`{out_p}`{Color.NC}"
+                    )
+                    try:
+                        rendered = self._render_file(Path(inp_p))
+                        with open(out_p, "w") as f:
+                            f.write(rendered)
+                    except Exception as e:
+                        eprint(f"Failed rendering file {Color.YELLOW}`{inp_p}`{Color.RED} - {e}\n")
+            finally:
+                print(f"{Color.BWHITE}Creating archive of backed up configs{Color.NC}")
+                bash(
+                    f"export START=$PWD && cd {tempdir} && tar -zcf $START/templater_backup_{int(time.time())}.tgz . > /dev/null 2>&1"
                 )
-                try:
-                    rendered = self._render_file(Path(inp_p))
-                    with open(out_p, "w") as f:
-                        f.write(rendered)
-                except Exception as e:
-                    eprint(f"Failed rendering file {Color.YELLOW}`{inp_p}`{Color.RED} - {e}\n")
-
-            print(f"{Color.BWHITE}Creating archive of backed up configs{Color.NC}")
-            bash(
-                f"export START=$PWD && cd {tempdir} && tar -zcf $START/templater_backup_{int(time.time())}.tgz . > /dev/null 2>&1"
-            )
 
     def _process_args(self):
         if self.args.command == "render":
