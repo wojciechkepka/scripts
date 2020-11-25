@@ -1,17 +1,12 @@
 ---
 files:
-  example.conf: "/tmp/test.conf"
+  files/.gtkrc-2.0: "/tmp/.gtkrc-2.0"
+  files/gtk-3_settings.ini: "/tmp/gtk3-settings.ini"
 themes:
-  ayu:
-    polybar.label.underline: "${colors.ayu-yellow}"
-    polybar.label.foreground: "${colors.ayu-blue}"
-  gruvbox:
-    polybar.label.underline: "${colors.gruv-red}"
-    polybar.label.foreground: "${colors.gruv-yellow}"
-  solarized:
-    polybar.label.underline: "${colors.solar-orange}"
-    polybar.label.foreground: "${colors.solar-blue}"
+  default:
+    gtk.font.name: "Fira Code 9"
   nord:
-    polybar.label.underline: "${colors.nord-blue}"
-    polybar.label.foreground: "${colors.nord-cyan}"
+    gtk3.theme.name: "Nordic"
+    gtk3.icons.name: "Nordic"
+    gtk2.theme.name: "Nordic"
 
