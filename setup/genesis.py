@@ -18,7 +18,7 @@ import urllib.request
 from pathlib import Path
 from typing import List, Dict
 
-sys.path.append(str(Path(__file__).parent.parent.absolute()) + "/")
+sys.path.append(str(Path(__file__).absolute().parent.parent) + "/")
 import system
 from util import Color, Command, inp, inp_or_default, bash, run_steps, fwrite, eprint, Step, errw, ExecOpts, catch_errs
 

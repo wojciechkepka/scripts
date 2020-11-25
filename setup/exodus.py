@@ -20,7 +20,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-sys.path.append(str(Path(__file__).parent.parent.absolute()) + "/")
+sys.path.append(str(Path(__file__).absolute().parent.parent) + "/")
 import system
 from util import Command, bash, ExecOpts, DEFAULT_OPTS, Color, outw, conv_b, eprint, measure, catch_errs
 
