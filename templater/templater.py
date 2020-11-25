@@ -74,13 +74,10 @@ class Lexer(object):
             if _next == None:
                 return Token(text, TokenType.NORMAL)
 
+            text += _next
             if _next.isalpha() or _next == "." or _next == "_":
-                text += _next
                 variable += _next
-            elif _next == " ":
-                text += _next
             else:
-                text += _next
                 return Token(text, TokenType.NORMAL)
 
         text += self.reader.next()  # add first '}'
