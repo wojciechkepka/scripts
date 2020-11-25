@@ -75,7 +75,7 @@ class Lexer(object):
                 return Token(text, TokenType.NORMAL)
 
             text += _next
-            if _next.isalpha() or _next == "." or _next == "_":
+            if _next.isalnum() or _next == "." or _next == "_":
                 variable += _next
             elif _next == " ":
                 if not variable or self.reader.peek() == " " or self.reader.peek() == "}":

@@ -112,6 +112,16 @@ class TestLexer(unittest.TestCase):
 
         self.assertEqual(got, want)
 
+    def test_parses_variable_with_digits(self):
+        inp = """{{ gtk2.theme.name1 }}"""
+
+        got = Lexer(inp).lex()
+        want = [
+            Token("{{ gtk2.theme.name1 }}", TokenType.VARIABLE, variable="gtk2.theme.name1"),
+        ]
+
+        self.assertEqual(got, want)
+
 
 class TestTemplater(unittest.TestCase):
     def test_replacing(self):
