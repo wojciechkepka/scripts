@@ -131,9 +131,10 @@ class Lexer(object):
 
 
 class Templater(object):
-    def __init__(self, text: str, variables: Dict[str, Any]):
+    def __init__(self, text: str, variables: Dict[str, Any], default: Dict[str, Any] = {}):
         self.tokens = Lexer(text).lex()
         self.variables = variables
+        self.default = default
 
     def render(self) -> str:
         s = ""
@@ -143,6 +144,8 @@ class Templater(object):
             elif token.type == TokenType.VARIABLE:
                 if token.variable in self.variables.keys():
                     s += str(self.variables[token.variable])
+                elif token.variable in self.default.keys():
+                    s += str(self.default[token.variable])
                 else:
                     s += f"`MISSING VARIABLE {token.variable}`"
 

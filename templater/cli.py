@@ -51,6 +51,7 @@ class TempalterCli(object):
         self.args = self.__parser().parse_args()
         self.config = self._read_config_file(self.args.config[0])
         self.theme = self._get_theme(self.args.theme[0])
+        self.defaults = self._get_theme("default") if "default" in self.config["themes"].keys() else {}
 
     @staticmethod
     def _read_config_file(location: Path) -> Config:
@@ -91,7 +92,7 @@ class TempalterCli(object):
     def _render_file(self, file: Path) -> str:
         with open(file, "r") as f:
             text = f.read()
-            return Templater(text, self.theme).render()
+            return Templater(text, self.theme, default=self.defaults).render()
 
     def __render(self):
         print(self._render_file(self.args.file[0]))
