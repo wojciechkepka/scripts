@@ -13,11 +13,13 @@ import argparse
 import sys
 import yaml
 import traceback
+import time
 from pathlib import Path
 from typing import Dict, Optional, Any
+from tempfile import TemporaryDirectory
 
 sys.path.append(str(Path(__file__).absolute().parent.parent) + "/")
-from util import catch_errs, Color, eprint
+from util import catch_errs, Color, eprint, Command, bash
 from templater import Templater
 
 ################################################################################
@@ -99,14 +101,21 @@ class TempalterCli(object):
             eprint(f"Missing {Color.BWHITE}`files`{Color.NC} in configuration")
             sys.exit(1)
 
-        for (inp_p, out_p) in self.config["files"].items():
-            print(f"{Color.BWHITE}`{inp_p}`{Color.NC} {Color.RED}~~~~~>{Color.BWHITE} `{out_p}`{Color.NC}")
-            try:
-                rendered = self._render_file(Path(inp_p))
-                with open(out_p, "w") as f:
-                    f.write(rendered)
-            except Exception as e:
-                eprint(f"Failed rendering file {Color.BWHITE}`{inp_p}`{Color.NC} - {e}")
+        with TemporaryDirectory() as tempdir:
+            for (inp_p, out_p) in self.config["files"].items():
+                p = Path(out_p)
+                if p.exists():
+                    Command("cp", [out_p, str(Path(tempdir) / p.name)]).safe_run()
+
+                print(f"{Color.BWHITE}`{inp_p}`{Color.NC} {Color.RED}~~~~~>{Color.BWHITE} `{out_p}`{Color.NC}")
+                try:
+                    rendered = self._render_file(Path(inp_p))
+                    with open(out_p, "w") as f:
+                        f.write(rendered)
+                except Exception as e:
+                    eprint(f"Failed rendering file {Color.BWHITE}`{inp_p}`{Color.NC} - {e}")
+
+            bash(f"export START=$PWD && cd {tempdir} && tar -zcvf $START/templater_backup_{int(time.time())}.tgz .")
 
     def _process_args(self):
         if self.args.command == "render":
