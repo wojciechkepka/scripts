@@ -94,6 +94,15 @@ class TestLexer(unittest.TestCase):
 
         self.assertEqual(got, want)
 
+    def test_doesnt_parse_variable_with_witespace(self):
+        inp = """{{ some variable }}"""
+        got = Lexer(inp).lex()
+        want = [
+            Token("{{ some variable }}", TokenType.NORMAL),
+        ]
+
+        self.assertEqual(got, want)
+
 
 class TestTemplater(unittest.TestCase):
     def test_replacing(self):
