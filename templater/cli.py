@@ -16,7 +16,7 @@ import traceback
 from pathlib import Path
 from typing import Dict, Optional, Any
 
-sys.path.append("../")
+sys.path.append(str(Path(__file__).parent.parent.absolute()) + "/")
 from util import catch_errs, Color, eprint
 from templater import Templater
 
