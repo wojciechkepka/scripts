@@ -5,6 +5,27 @@ from templater import Lexer, TokenType, Token, Templater
 
 
 class TestLexer(unittest.TestCase):
+    def test_empty_string(self):
+        inp = """"""
+        got = Lexer(inp).lex()
+        want = []
+
+        self.assertEqual(got, want)
+
+    def test_parses_unfinished_token(self):
+        inp = """{{  """
+        got = Lexer(inp).lex()
+        want = [Token("{{  ", TokenType.NORMAL)]
+
+        self.assertEqual(got, want)
+
+    def test_doesnt_parse_comma_in_variable(self):
+        inp = """{{  xx,y }}"""
+        got = Lexer(inp).lex()
+        want = [Token("{{  xx,y }}", TokenType.NORMAL)]
+
+        self.assertEqual(got, want)
+
     def test_parses_normal_token(self):
         inp = """some simple text."""
         got = Lexer(inp).lex()
