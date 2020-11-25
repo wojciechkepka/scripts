@@ -12,11 +12,12 @@ import json
 import argparse
 import sys
 import yaml
+import traceback
 from pathlib import Path
 from typing import Dict, Optional, Any
 
 sys.path.append("../")
-from util import catch_errs
+from util import catch_errs, Color, eprint
 from templater import Templater
 
 ################################################################################
@@ -46,44 +47,66 @@ class TempalterCli(object):
 
     def __init__(self):
         self.args = self.__parser().parse_args()
+        self.config = self._read_config_file(self.args.config[0])
+        self.theme = self._get_theme(self.args.theme[0])
 
     @staticmethod
     def _read_config_file(location: Path) -> Config:
-        with location.open() as f:
-            var = yaml.load(f, Loader=yaml.Loader)
-            if isinstance(var, dict):
-                return var
+        try:
+            with location.open() as f:
+                var = yaml.load(f, Loader=yaml.Loader)
+                if isinstance(var, dict):
+                    return var
+        except yaml.YAMLError as e:
+            eprint(f"Invalid configuration file at {Color.BWHITE}`{location}`{Color.RED} - {e}")
+            sys.exit(1)
+        except Exception as e:
+            eprint(f"Failed reading configuration file from {Color.BWHITE}`{location}`{Color.RED}` - {e}")
+            sys.exit(1)
 
         return {}
 
-    @staticmethod
-    def _get_theme(theme: str, config: Config) -> Dict[str, str]:
-        if "themes" in config.keys():
-            themes = config["themes"]
-            if theme in themes and isinstance(themes[theme], dict):
-                return config["themes"][theme]
+    def _get_theme(self, theme: str) -> Dict[str, str]:
+        if "themes" not in self.config.keys():
+            eprint(f"Missing {Color.BWHITE}`themes`{Color.RED} in configuration")
+            sys.exit(1)
 
-        return {}
+        themes = self.config["themes"]
+
+        if theme not in themes:
+            eprint(f"Missing theme {Color.BWHITE}`{theme}`{Color.RED} in configuration")
+            sys.exit(1)
+
+        if not isinstance(themes[theme], dict):
+            eprint(
+                f"Invalid configuration for {Color.BWHITE}`{theme}`{Color.RED}"
+                " - theme configuration should be a key value map of strings"
+            )
+            sys.exit(1)
+
+        return self.config["themes"][theme]
+
+    def _render_file(self, file: Path) -> str:
+        with open(file, "r") as f:
+            text = f.read()
+            return Templater(text, self.theme).render()
 
     def __render(self):
-        with open(self.args.file[0], "r") as f:
-            text = f.read()
-            config = self._read_config_file(self.args.config[0])
-            theme = self._get_theme(self.args.theme[0], config)
-            print(Templater(text, theme).render())
+        print(self._render_file(self.args.file[0]))
 
     def __run(self):
-        config = self._read_config_file(self.args.config[0])
-        theme = self._get_theme(self.args.theme[0], config)
-        if "files" in config.keys():
-            for (inp_p, out_p) in config["files"].items():
-                print(f"Processing file {inp_p}")
-                f = open(inp_p, "r")
-                text = f.read()
-                f.close()
+        if "files" not in self.config.keys():
+            eprint(f"Missing {Color.BWHITE}`files`{Color.NC} in configuration")
+            sys.exit(1)
 
+        for (inp_p, out_p) in self.config["files"].items():
+            print(f"{Color.BWHITE}`{inp_p}`{Color.NC} {Color.RED}~~~~~>{Color.BWHITE} `{out_p}`{Color.NC}")
+            try:
+                rendered = self._render_file(Path(inp_p))
                 with open(out_p, "w") as f:
-                    f.write(Templater(text, theme).render())
+                    f.write(rendered)
+            except Exception as e:
+                eprint(f"Failed rendering file {Color.BWHITE}`{inp_p}`{Color.NC} - {e}")
 
     def _process_args(self):
         if self.args.command == "render":
