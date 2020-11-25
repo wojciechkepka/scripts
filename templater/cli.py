@@ -19,7 +19,7 @@ from typing import Dict, Optional, Any
 from tempfile import TemporaryDirectory
 
 sys.path.append(str(Path(__file__).absolute().parent.parent) + "/")
-from util import catch_errs, Color, eprint, Command, bash
+from util import catch_errs, Color, eprint, Command, bash, ExecOpts
 from templater import Templater
 
 ################################################################################
@@ -106,17 +106,25 @@ class TempalterCli(object):
             for (inp_p, out_p) in self.config["files"].items():
                 p = Path(out_p)
                 if p.exists():
-                    Command("cp", [out_p, str(Path(tempdir) / p.name)]).safe_run()
+                    print(f"{Color.BWHITE}Backing up {Color.YELLOW}`{p}`{Color.BWHITE}, file already exists.{Color.NC}")
+                    Command(
+                        "cp", [out_p, str(Path(tempdir) / p.name)], opts=ExecOpts(follow=False, display=False)
+                    ).safe_run()
 
-                print(f"{Color.BWHITE}`{inp_p}`{Color.NC} {Color.RED}~~~~~>{Color.BWHITE} `{out_p}`{Color.NC}")
+                print(
+                    f"{Color.BWHITE}Rendering {Color.YELLOW}`{inp_p}` {Color.RED}~~~~~>{Color.YELLOW} `{out_p}`{Color.NC}"
+                )
                 try:
                     rendered = self._render_file(Path(inp_p))
                     with open(out_p, "w") as f:
                         f.write(rendered)
                 except Exception as e:
-                    eprint(f"Failed rendering file {Color.BWHITE}`{inp_p}`{Color.NC} - {e}")
+                    eprint(f"Failed rendering file {Color.YELLOW}`{inp_p}`{Color.RED} - {e}")
 
-            bash(f"export START=$PWD && cd {tempdir} && tar -zcvf $START/templater_backup_{int(time.time())}.tgz .")
+            print(f"{Color.BWHITE}Creating archive of backed up configs{Color.NC}")
+            bash(
+                f"export START=$PWD && cd {tempdir} && tar -zcf $START/templater_backup_{int(time.time())}.tgz . > /dev/null 2>&1"
+            )
 
     def _process_args(self):
         if self.args.command == "render":
