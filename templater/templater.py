@@ -50,6 +50,12 @@ class Token(object):
         else:
             return False
 
+    def __repr__(self):
+        if self.type == TokenType.NORMAL:
+            return f'"{self.text}"'
+        elif self.type == TokenType.VARIABLE:
+            return f'var("{self.variable}")'
+
 
 class Lexer(object):
     def __init__(self, text: str):
