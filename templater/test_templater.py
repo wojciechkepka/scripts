@@ -94,11 +94,20 @@ class TestLexer(unittest.TestCase):
 
         self.assertEqual(got, want)
 
-    def test_doesnt_parse_variable_with_witespace(self):
+    def test_doesnt_parse_variable_with_whitespace(self):
         inp = """{{ some variable }}"""
         got = Lexer(inp).lex()
         want = [
             Token("{{ some variable }}", TokenType.NORMAL),
+        ]
+
+        self.assertEqual(got, want)
+
+    def test_parses_variable_with_multiple_spaces(self):
+        inp = """{{  some.long.variable      }}"""
+        got = Lexer(inp).lex()
+        want = [
+            Token("{{  some.long.variable      }}", TokenType.VARIABLE, variable="some.long.variable"),
         ]
 
         self.assertEqual(got, want)
