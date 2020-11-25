@@ -1,0 +1,17 @@
+---
+files:
+  example.conf: "/tmp/test.conf"
+themes:
+  ayu:
+    polybar.label.underline: "${colors.ayu-yellow}"
+    polybar.label.foreground: "${colors.ayu-blue}"
+  gruvbox:
+    polybar.label.underline: "${colors.gruv-red}"
+    polybar.label.foreground: "${colors.gruv-yellow}"
+  solarized:
+    polybar.label.underline: "${colors.solar-orange}"
+    polybar.label.foreground: "${colors.solar-blue}"
+  nord:
+    polybar.label.underline: "${colors.nord-blue}"
+    polybar.label.foreground: "${colors.nord-cyan}"
+
