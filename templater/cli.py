@@ -102,13 +102,15 @@ class TempalterCli(object):
             eprint(f"Missing {Color.BWHITE}`files`{Color.NC} in configuration")
             sys.exit(1)
 
+        start = time.time()
         with TemporaryDirectory() as tempdir:
             try:
+                print(f"{Color.CYAN}{'~' * 80}{Color.NC}")
                 for (inp_p, out_p) in self.config["files"].items():
-                    p = Path(out_p)
+                    p = Path(out_p).expanduser()
 
                     if p.is_dir():
-                        eprint(f"Output path {Color.YELLOW}`{out_p}`{Color.RED} is a directory, skipping.\n")
+                        eprint(f"Output path {Color.YELLOW}`{p}`{Color.RED} is a directory, skipping.\n")
                         continue
 
                     if p.exists():
@@ -116,23 +118,27 @@ class TempalterCli(object):
                             f"{Color.BWHITE}Backing up {Color.YELLOW}`{p}`{Color.BWHITE}, file already exists.{Color.NC}"
                         )
                         Command(
-                            "cp", [out_p, str(Path(tempdir) / p.name)], opts=ExecOpts(follow=False, display=False)
+                            "cp", [str(p), str(Path(tempdir) / p.name)], opts=ExecOpts(follow=False, display=False)
                         ).safe_run()
 
                     print(
-                        f"{Color.BWHITE}Rendering {Color.YELLOW}`{inp_p}`{Color.RED} ~~~~~> {Color.YELLOW}`{out_p}`{Color.NC}"
+                        f"{Color.BWHITE}Rendering {Color.YELLOW}`{inp_p}`{Color.RED} ~~~~~> {Color.YELLOW}`{p}`{Color.NC}"
                     )
                     try:
                         rendered = self._render_file(Path(inp_p))
-                        with open(out_p, "w") as f:
+                        with open(p, "w") as f:
                             f.write(rendered)
                     except Exception as e:
                         eprint(f"Failed rendering file {Color.YELLOW}`{inp_p}`{Color.RED} - {e}\n")
+                    print(f"{Color.CYAN}{'~' * 80}{Color.NC}")
             finally:
                 print(f"{Color.BWHITE}Creating archive of backed up configs{Color.NC}")
                 bash(
                     f"export START=$PWD && cd {tempdir} && tar -zcf $START/templater_backup_{int(time.time())}.tgz . > /dev/null 2>&1"
                 )
+                print(f"{Color.CYAN}{'~' * 80}{Color.NC}")
+        end = time.time()
+        print(f"{Color.BWHITE}Finished in: {Color.GREEN}{end - start:.3f} s{Color.NC}")
 
     def _process_args(self):
         if self.args.command == "render":
