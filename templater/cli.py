@@ -105,6 +105,11 @@ class TempalterCli(object):
         with TemporaryDirectory() as tempdir:
             for (inp_p, out_p) in self.config["files"].items():
                 p = Path(out_p)
+
+                if p.is_dir():
+                    eprint(f"Output path {Color.YELLOW}`{out_p}`{Color.RED} is a directory, skipping.\n")
+                    continue
+
                 if p.exists():
                     print(f"{Color.BWHITE}Backing up {Color.YELLOW}`{p}`{Color.BWHITE}, file already exists.{Color.NC}")
                     Command(
@@ -112,14 +117,14 @@ class TempalterCli(object):
                     ).safe_run()
 
                 print(
-                    f"{Color.BWHITE}Rendering {Color.YELLOW}`{inp_p}` {Color.RED}~~~~~>{Color.YELLOW} `{out_p}`{Color.NC}"
+                    f"{Color.BWHITE}Rendering {Color.YELLOW}`{inp_p}`{Color.RED} ~~~~~> {Color.YELLOW}`{out_p}`{Color.NC}"
                 )
                 try:
                     rendered = self._render_file(Path(inp_p))
                     with open(out_p, "w") as f:
                         f.write(rendered)
                 except Exception as e:
-                    eprint(f"Failed rendering file {Color.YELLOW}`{inp_p}`{Color.RED} - {e}")
+                    eprint(f"Failed rendering file {Color.YELLOW}`{inp_p}`{Color.RED} - {e}\n")
 
             print(f"{Color.BWHITE}Creating archive of backed up configs{Color.NC}")
             bash(
