@@ -104,6 +104,8 @@ class Lexer(object):
                 # it will get added as an extra token
                 if self.reader.is_last():
                     break
+            elif self.reader.current() == None:
+                break
             else:
                 text += self.reader.current()
                 self.reader.next()
