@@ -40,6 +40,22 @@ class TestLexer(unittest.TestCase):
 
         self.assertEqual(got, want)
 
+    def test_parses_comma_separated_variable(self):
+        inp = """{{ category.subcategory.variable }}"""
+        got = Lexer(inp).lex()
+        want = [
+            Token("{{ category.subcategory.variable }}", TokenType.VARIABLE, variable="category.subcategory.variable")
+        ]
+
+        self.assertEqual(got, want)
+
+    def test_parses_underscore_separated_variable(self):
+        inp = """{{ some_long_name }}"""
+        got = Lexer(inp).lex()
+        want = [Token("{{ some_long_name }}", TokenType.VARIABLE, variable="some_long_name")]
+
+        self.assertEqual(got, want)
+
     def test_parses_multiple_variables(self):
         inp = """some text {{ x }} {{ y }}"""
         got = Lexer(inp).lex()
