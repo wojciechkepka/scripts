@@ -80,6 +80,7 @@ class Lexer(object):
             elif _next == " ":
                 text += _next
             else:
+                text += _next
                 return Token(text, TokenType.NORMAL)
 
         text += self.reader.next()  # add first '}'
