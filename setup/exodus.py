@@ -8,7 +8,6 @@ CLI utility to create and manage backups.
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ imports ~~~~~~~~~~~|
 ################################################################################
 
-import system
 import time
 import argparse
 import time
