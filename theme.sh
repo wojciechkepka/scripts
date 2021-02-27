@@ -7,6 +7,7 @@ THEMES=(
     "gruvbox"
     "solarized"
     "nord"
+    "xbliss"
 )
 
 ################################################################################
@@ -37,7 +38,7 @@ change_alacritty() {
 disable_nvim() {
     case "$1" in
         "solarized")
-            theme="solarized8"
+            theme="solarized8_flat"
             ;;
         *)
             theme="$1"
@@ -48,7 +49,7 @@ disable_nvim() {
 enable_nvim() {
     case "$1" in
         "solarized")
-            theme="solarized8"
+            theme="solarized8_flat"
             ;;
         *)
             theme="$1"
@@ -67,6 +68,9 @@ change_gtk_theme() {
         "solarized")
             theme="Solarized-Dark-Orange"
             ;;
+        "xbliss")
+            theme="Dracula"
+            ;;
         *)
             echo "No GTK theme for $1"
             return 1
@@ -80,6 +84,20 @@ enable_polybar() {
     sd "N;s/(;$1\n);(foreground.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config.ini
     sd "N;s/(;$1\n);(format-foreground.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
     sd "N;s/(;$1\n);(label-focused-underline.*)/\1\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
+
+    case "$1" in
+        "xbliss")
+            bg="xbliss-bg"
+            ;;
+        "solarized")
+            bg="solarized-bg"
+            ;;
+        *)
+            bg="common-bg"
+            ;;
+    esac
+
+    sd "s/^(background =).*$/\1 \${colors.$bg}/1" $XDG_CONFIG_DIR/polybar/config.ini
 }
 disable_polybar() {
     sd "N;s/(;$1\n)(foreground.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config.ini
@@ -116,12 +134,16 @@ change_wallpaper() {
             vertical="gruvbox_vertical.jpg"
             ;;
         "solarized")
-            horizontal="solarized.png"
-            vertical="crosshair.jpg"
+            horizontal="solarized_arch.png"
+            vertical="solarized_arch_vertical.png"
             ;;
         "nord")
             horizontal="nord_arch.png"
             vertical="nord_arch_vertical.png"
+            ;;
+        "xbliss")
+            horizontal="xbliss_arch.png"
+            vertical="xbliss_arch_vertical.png"
             ;;
         *)
             echo "No wallpaper for $1"
