@@ -32,6 +32,12 @@ enable_bashrc() {
 disable_bashrc() {
     sd "s/^(export PS1.*#$1)/#\1/g" $HOME/.bashrc
 }
+enable_starship() {
+    sd "N;s/(#xbliss\n)#(style = .*)/\1\2/1;$!P;$!D" ~/.config/starship.toml
+}
+disable_starship() {
+    sd "N;s/(#xbliss\n)(style = .*)/\1\#\2/1;$!P;$!D" ~/.config/starship.toml
+}
 change_alacritty() {
     sd "s/(colors: \*).*/\1$1/g" $XDG_CONFIG_DIR/alacritty/alacritty.yml
 }
@@ -110,6 +116,7 @@ enable_theme() {
     enable_bashrc $1
     enable_nvim $1
     enable_polybar $1
+    enable_starship $1
     change_alacritty $1
     change_gtk_theme $1
     change_wallpaper $1
@@ -121,6 +128,7 @@ disable_theme() {
     disable_bashrc $1
     disable_nvim $1
     disable_polybar $1
+    disable_starship $1
     echo "------------------------------------------------------"
 }
 change_wallpaper() {
