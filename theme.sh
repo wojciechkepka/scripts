@@ -168,9 +168,11 @@ change_wallpaper() {
 
     horizontal="${horizontal//\//\\\/}" # need to escape / for sed to work
     vertical="${vertical//\//\\\/}"
+    usr_horizontal="${usr_horizontal//\//\\\/}" # need to escape / for sed to work
+    usr_vertical="${usr_vertical//\//\\\/}"
     sd "s/(feh --bg-fill).*/\1 $vertical --bg-fill $horizontal/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
-    sd "s/(background=).*( # horizontal)/\1$usr_horizontal\2/g" /etc/configs/etc/lightdm/lightdm-gtk-greeter.conf
-    sd "s/(background=).*( # vertical)/\1$usr_vertical\2/g" /etc/configs/etc/lightdm/lightdm-gtk-greeter.conf
+    sd "N;s/(#horizontal\nbackground=).*/\1$usr_horizontal/1;$!P;$!D" /etc/configs/etc/lightdm/lightdm-gtk-greeter.conf
+    sd "N;s/(#vertical\nbackground=).*/\1$usr_vertical/1;$!P;$!D" /etc/configs/etc/lightdm/lightdm-gtk-greeter.conf
 }
 
 ################################################################################
