@@ -18,6 +18,7 @@ msg() {
 }
 sd() {
     echo "Replacing $2"
+    [ ! -z $DEBUG ] && echo -e "\tusing pattern '$1'"
     sed -r -i --follow-symlinks -e "$1" $2
 }
 enable_tmux() {
@@ -84,6 +85,7 @@ change_gtk_theme() {
 
     sd "s/(gtk-theme-name=).*/\1$theme/g" $XDG_CONFIG_DIR/gtk-3.0/settings.ini
     sd "s/(gtk-theme-name=\").*\"$/\1$theme\"/g" $HOME/.gtkrc-2.0
+    sd "s/^(theme-name=).*/\1$theme/g" /etc/configs/etc/lightdm/lightdm-gtk-greeter.conf
 
 }
 enable_polybar() {
@@ -165,6 +167,8 @@ change_wallpaper() {
     horizontal="${horizontal//\//\\\/}" # need to escape / for sed to work
     vertical="${vertical//\//\\\/}"
     sd "s/(feh --bg-fill).*/\1 $vertical --bg-fill $horizontal/g" $XDG_CONFIG_DIR/bspwm/bspwmrc
+    sd "s/(background=).*( # horizontal)/\1$horizontal\2/g" /etc/configs/etc/lightdm/lightdm-gtk-greeter.conf
+    sd "s/(background=).*( # vertical)/\1$vertical\2/g" /etc/configs/etc/lightdm/lightdm-gtk-greeter.conf
 }
 
 ################################################################################
