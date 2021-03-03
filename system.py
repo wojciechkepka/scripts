@@ -22,7 +22,7 @@ from util import Command, fwrite, bash, ExecOpts
 
 ARCH_URL = "https://aur.archlinux.org"
 PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
-YAY_REPO = f"{ARCH_URL}/yay.git"
+PARU_REPO = "https://github.com/Morganamilo/paru"
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -127,26 +127,19 @@ def install_and_run_reflector():
     ).safe_run()
 
 
-def build_yay():
+def build_paru():
     install_sudo()
 
-    bld_pkgs = ["git", "wget", "go", "fakeroot"]
+    bld_pkgs = ["base-devel"]
     if not bins_exist(bld_pkgs):
         install_pkgs(bld_pkgs)
 
     with TemporaryDirectory() as tmpdir:
-        gitclone(PACKAGE_QUERY_REPO, Path(f"{tmpdir}/package-query"))
-        gitclone(YAY_REPO, Path(f"{tmpdir}/yay"))
+        gitclone(PARU_REPO, Path(f"{tmpdir}/paru"))
         chown(tmpdir, "nobody", "nobody")
 
         sudo_nopasswd("nobody")
-        Path("/.cache/go-build").mkdir(parents=True)
-        chown("/.cache", "nobody", "nobody")
-
-        bash(f"cd {tmpdir}/package-query && sudo -u nobody makepkg -srci --noconfirm")
-        bash(f"cd {tmpdir}/yay && sudo -u nobody makepkg -srci --noconfirm")
-
-        shutil.rmtree("/.cache")
+        bash(f"cd {tmpdir}/paru && sudo -u nobody makepkg -srci --noconfirm")
         rm_sudo_nopasswd("nobody")
 
 

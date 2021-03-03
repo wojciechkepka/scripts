@@ -190,13 +190,13 @@ class Setup(object):
             d.mkdir(parents=True, exist_ok=True)
 
     def install_pkgs(self, pkgs: List[str]):
-        if shutil.which("yay") is None:
-            system.build_yay()
+        if shutil.which("paru") is None:
+            system.build_paru()
 
         if not self.username:
             self.username = inp("Enter username: ")
 
-        system.install_pkgs(pkgs, pkgmngr="yay", user=self.username)
+        system.install_pkgs(pkgs, pkgmngr="paru", user=self.username)
 
     def install_themes(self):
         if Path(self.theme_dir()).exists():
@@ -367,7 +367,7 @@ class Setup(object):
             system.nvim(f"CocInstall -sync {ext}|q|q")
 
     def install_grub(self):
-        system.install_pkgs(["grub", "efibootmgr"], pkgmngr="yay", user=self.username)
+        system.install_pkgs(["grub", "efibootmgr"], pkgmngr="paru", user=self.username)
         location = inp("Enter boot partition location: ")
         if location:
             Command(
