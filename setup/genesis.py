@@ -235,10 +235,12 @@ class Setup(object):
             self.git_conf_dir(),
             self.xdg_conf_dir(),
             Path("/etc/lightdm"),
+            Path("/etc/default"),
             Path("/usr/share/backgrounds"),
             Path("/usr/share/themes"),
             Path("/usr/share/vim/vimfiles/ftdetect"),
             Path("/usr/share/vim/vimfiles/syntax"),
+            Path("/usr/share/grub/themes"),
             self.xdg_conf_dir() / "alacritty",
             self.xdg_conf_dir() / "bspwm",
             self.xdg_conf_dir() / "nvim",
@@ -289,11 +291,13 @@ class Setup(object):
             system.link(self.git_conf_dir(), f, self.userhome)
 
         global_files = [
+            "/etc/default/grub",
             "/etc/lightdm/lightdm.conf",
             "/etc/lightdm/lightdm-gtk-greeter.conf",
             "/etc/mkinitcpio.conf",
             "/usr/share/vim/vimfiles/syntax/notes.vim",
             "/usr/share/vim/vimfiles/ftdetect/notes.vim",
+            "/usr/share/grub/themes/mytheme",
             "/etc/pacman.conf",
         ]
 
