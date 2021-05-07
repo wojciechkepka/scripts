@@ -5,6 +5,7 @@ CONF_REPO_DIR="$HOME/dev/configs"
 THEMES=(
     "ayu"
     "gruvbox"
+    "gruvbox_light"
     "solarized"
     "nord"
     "xbliss"
@@ -22,16 +23,19 @@ sd() {
     sed -r -i --follow-symlinks -e "$1" $2
 }
 enable_tmux() {
-    sd "s/^#(set.*#$1)/\1/g" $HOME/.tmux.conf
+    case "$1" in
+        "gruvbox_light")
+            theme="gruvbox"
+            ;;
+        *)
+            theme="$1"
+            ;;
+    esac
+
+    sd "s/^#(set.*#${theme})/\1/g" $HOME/.tmux.conf
 }
 disable_tmux() {
     sd "s/^(set.*#$1)/#\1/g" $HOME/.tmux.conf
-}
-enable_bashrc() {
-    sd "s/^#(export PS1.*#$1)/\1/g" $HOME/.bashrc
-}
-disable_bashrc() {
-    sd "s/^(export PS1.*#$1)/#\1/g" $HOME/.bashrc
 }
 enable_starship() {
     sd "N;s/(#xbliss\n)#(style = .*)/\1\2/1;$!P;$!D" ~/.config/starship.toml
@@ -100,6 +104,8 @@ enable_polybar() {
         "solarized")
             bg="solarized-bg"
             ;;
+        "gruvbox")
+            bg="gruv-bg"
         *)
             bg="common-bg"
             ;;
@@ -111,11 +117,11 @@ disable_polybar() {
     sd "N;s/(;$1\n)(foreground.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/config.ini
     sd "N;s/(;$1\n)(format-foreground.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
     sd "N;s/(;$1\n)(label-focused-underline.*)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
+    sd "N;s/(;$1\n)(background)/\1;\2/1;$!P;$!D;$D" $XDG_CONFIG_DIR/polybar/modules.ini
 }
 enable_theme() {
     msg "Enabling $1"
     enable_tmux $1
-    enable_bashrc $1
     enable_nvim $1
     enable_polybar $1
     enable_starship $1
@@ -127,7 +133,6 @@ enable_theme() {
 disable_theme() {
     msg "Disabling $1"
     disable_tmux $1
-    disable_bashrc $1
     disable_nvim $1
     disable_polybar $1
     disable_starship $1
@@ -140,8 +145,8 @@ change_wallpaper() {
             vertical="crosshair.jpg"
             ;;
         "gruvbox")
-            horizontal="gruvbox.jpg"
-            vertical="gruvbox_vertical.jpg"
+            horizontal="gruvbox.png"
+            vertical="gruvbox_vertical.png"
             ;;
         "solarized")
             horizontal="solarized_arch.png"
