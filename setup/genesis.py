@@ -284,7 +284,6 @@ class Setup(object):
             ".config/picom/picom.conf",
             ".config/rofi/config.rasi",
             ".config/zathura/zathurarc",
-            ".config/starship.toml",
         ]
 
         for f in conf_files:
