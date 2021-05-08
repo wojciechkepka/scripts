@@ -22,7 +22,7 @@ from util import Command, fwrite, bash, ExecOpts
 
 ARCH_URL = "https://aur.archlinux.org"
 PACKAGE_QUERY_REPO = f"{ARCH_URL}/package-query.git"
-PARU_REPO = "https://github.com/Morganamilo/paru"
+PARU_REPO = "https://aur.archlinux.org/paru.git"
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ funcs ~~~~~~~~~~~~~|
@@ -137,6 +137,7 @@ def build_paru():
     with TemporaryDirectory() as tmpdir:
         gitclone(PARU_REPO, Path(f"{tmpdir}/paru"))
         chown(tmpdir, "nobody", "nobody")
+        bash(f"usermod -d {tmpdir} nobody")
 
         sudo_nopasswd("nobody")
         bash(f"cd {tmpdir}/paru && sudo -u nobody makepkg -srci --noconfirm")

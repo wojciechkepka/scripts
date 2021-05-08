@@ -164,7 +164,9 @@ class Command(object):
 
     def _run(self):
         self.subprocess = self._subprocess()
-        (self.stdout, self.stderr) = map(lambda x: x.decode("utf-8"), self.subprocess.communicate())
+        (self.stdout, self.stderr) = map(
+            lambda x: "" if x is None else x.decode("utf-8"), self.subprocess.communicate()
+        )
         self.exit_code = self.subprocess.returncode
         if self.exit_code != 0:
             if self.opts.display and self.stderr:

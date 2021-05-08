@@ -41,8 +41,8 @@ CITY = "Warsaw"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ globals ~~~~~~~~~~~|
 ################################################################################
 
-FILENAME = Path(__file__)
-FULLPATH = FILENAME.absolute()
+FULLPATH = Path(__file__)
+FILENAME = FULLPATH.name
 
 ################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ packages ~~~~~~~~~~|
@@ -126,7 +126,7 @@ class Init(object):
         ).safe_run(reraise=False)
 
     def archive_scripts(self):
-        bash(f"cd {FULLPATH.parent} && zip -r {self.location}/{FILENAME} ./*", quit=True)
+        bash(f"cd {FULLPATH.parent} && cp ../*.py . && zip -r {self.location}/{FILENAME} ./*.py", quit=True)
 
     def init_setup(self):
         self.archive_scripts()
